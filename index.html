@@ -51,14 +51,14 @@ h4 { font-size: 1rem; text-transform: uppercase; letter-spacing: .12em; font-wei
 .scroll-x { overflow-x: auto; }
 ul.plain { list-style: none; padding: 0; margin: 0; } ul.plain li { padding: .25em 0; border-bottom: 1px dotted rgba(127,100,70,.3); }
 
-/* ---------- lamps ---------- */
+
 .led { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #3a2a1a; box-shadow: inset 0 1px 2px rgba(0,0,0,.8); vertical-align: middle; flex: none; }
 .led.on { background: var(--led); box-shadow: 0 0 8px var(--led), 0 0 2px #fff inset; }
 .led.on.red { background: #ff4b3a; box-shadow: 0 0 10px #ff4b3a; animation: blink 1.2s infinite; }
 .led.on.green { background: #8dff9e; box-shadow: 0 0 6px #8dff9e; }
 @keyframes blink { 50% { opacity: .35; } }
 
-/* ---------- buttons ---------- */
+
 .btn { appearance: none; border: 1px solid #1d130c; background: linear-gradient(#7a2a2c, var(--accent)); color: #f6ecd8; padding: .45em 1.1em; border-radius: var(--r); cursor: pointer; font-size: .95rem; letter-spacing: .03em; box-shadow: 0 2px 0 #1d0c0b, inset 0 1px 0 rgba(255,255,255,.18); text-decoration: none; display: inline-block; transition: transform .06s; }
 .btn:active { transform: translateY(2px); box-shadow: 0 0 0 #1d0c0b; }
 .btn.ghost { background: transparent; color: inherit; border-color: rgba(168,152,124,.5); box-shadow: none; }
@@ -74,7 +74,7 @@ ul.plain { list-style: none; padding: 0; margin: 0; } ul.plain li { padding: .25
 .chip { font-size: .85rem; padding: .1em .6em; border-radius: 99px; border: 1px solid rgba(168,152,124,.45); background: rgba(0,0,0,.15); cursor: default; }
 button.chip { cursor: pointer; } .chip small { opacity: .6; }
 
-/* ---------- forms & paper ---------- */
+
 .paper { background: linear-gradient(170deg, var(--paper), var(--paper2)); color: var(--ink); border-radius: 4px; box-shadow: 0 18px 50px rgba(0,0,0,.55), inset 0 0 60px rgba(120,90,50,.12); }
 .paper h1, .paper h2, .paper h3 { color: var(--ink); }
 .card { padding: 2rem 2.2rem; max-width: 520px; width: 100%; }
@@ -90,7 +90,7 @@ label.check { display: inline-flex; gap: .45em; align-items: center; cursor: poi
 .form.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 .8rem; }
 .range input { width: 100%; accent-color: var(--accent); }
 
-/* ---------- auth / centre screens ---------- */
+
 .center-screen { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
 .warm { font-family: var(--mono); color: var(--led); letter-spacing: .2em; text-transform: uppercase; font-size: .85rem; }
 .auth { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; gap: 3rem; align-items: center; padding: 3rem 6vw; }
@@ -99,7 +99,7 @@ label.check { display: inline-flex; gap: .45em; align-items: center; cursor: poi
 .lede { font-size: 1.1rem; font-style: italic; color: var(--ink-soft); }
 .auth .card h1 { font-size: 2.3rem; }
 
-/* ---------- top bar ---------- */
+
 .topbar { display: flex; align-items: center; gap: 1.5rem; padding: .7rem 1.4rem; background: linear-gradient(var(--metal1), var(--metal2)); border-bottom: 1px solid #000; box-shadow: 0 2px 12px rgba(0,0,0,.5); position: sticky; top: 0; z-index: 20; flex-wrap: wrap; }
 .topbar::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); pointer-events: none; }
 .brand { display: flex; gap: .8rem; align-items: center; }
@@ -114,7 +114,7 @@ label.check { display: inline-flex; gap: .45em; align-items: center; cursor: poi
 main { padding: 1.4rem; max-width: 1500px; margin: 0 auto; }
 .foot { text-align: center; color: var(--muted); font-size: .8rem; padding: 1rem 1rem 2rem; font-style: italic; }
 
-/* ---------- the deck ---------- */
+
 .deck {
   border-radius: 14px; padding: 18px; position: relative;
   background:
@@ -152,7 +152,7 @@ main { padding: 1.4rem; max-width: 1500px; margin: 0 auto; }
 .eject-anim { animation: ejectOut .45s ease-in forwards; }
 @keyframes ejectOut { to { transform: translateY(-120%) rotate(4deg); opacity: 0; } }
 
-/* lcd */
+
 .lcd { background: radial-gradient(ellipse at 50% 0%, #2a1a08, #120a03 70%); border-radius: 4px; padding: .5em .8em; font-family: var(--mono); color: var(--led); text-shadow: 0 0 6px var(--led); font-size: .82rem; letter-spacing: .06em; box-shadow: inset 0 2px 8px rgba(0,0,0,.9), 0 1px 0 rgba(255,255,255,.1); min-height: 3.2em; text-transform: uppercase; }
 .lcd .dim { opacity: .55; } .lcd.small { font-size: .74rem; }
 .lcd .kv { display: flex; justify-content: space-between; gap: .5em; } .lcd .kv span { opacity: .65; }
@@ -160,7 +160,7 @@ main { padding: 1.4rem; max-width: 1500px; margin: 0 auto; }
 .lcd-l2 { opacity: .75; font-size: .76rem; }
 .lcd .bar { height: 4px; background: rgba(255,179,71,.15); margin-top: .4em; } .lcd .bar i { display: block; height: 100%; background: var(--led); box-shadow: 0 0 6px var(--led); }
 
-/* counters */
+
 .counters { display: flex; gap: 1rem; justify-content: space-around; flex-wrap: wrap; }
 .counter-wrap { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
 .counter { display: flex; align-items: center; background: #0c0805; padding: 3px 6px; border-radius: 4px; box-shadow: inset 0 2px 6px rgba(0,0,0,.95); font-family: var(--mono); font-size: 1.05rem; }
@@ -171,7 +171,7 @@ main { padding: 1.4rem; max-width: 1500px; margin: 0 auto; }
 .tape-track { height: 5px; background: #0c0805; border-radius: 3px; overflow: hidden; box-shadow: inset 0 1px 2px #000; }
 .tape-track i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #4a3221, #8a5a34); }
 
-/* keys */
+
 .keys { display: flex; gap: 6px; flex-wrap: wrap; align-items: stretch; }
 .keys.col { flex-direction: column; }
 .key {
@@ -190,7 +190,7 @@ main { padding: 1.4rem; max-width: 1500px; margin: 0 auto; }
 .knobs { gap: 10px; } .knob { flex: 1 1 110px; margin: 0; display: flex; flex-direction: column; gap: .15rem; }
 .knob.toggle { flex-direction: row; align-items: center; gap: .4rem; } .knob.toggle input { accent-color: var(--accent); }
 
-/* desk */
+
 .desk { margin-top: 1.4rem; }
 .subtabs { display: flex; gap: 2px; flex-wrap: wrap; }
 .subtab { background: rgba(0,0,0,.25); border: 1px solid rgba(0,0,0,.4); border-bottom: 0; padding: .35em 1em; border-radius: 6px 6px 0 0; cursor: pointer; color: var(--muted); font-variant: small-caps; text-transform: lowercase; letter-spacing: .1em; }
@@ -241,7 +241,7 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 .bm-list { list-style: none; padding: 0; } .bm-list li { display: flex; gap: 1rem; align-items: center; border-bottom: 1px dotted rgba(0,0,0,.2); padding: .4em 0; } .bm-list li button.link { flex: 1; }
 .bm-list small { color: #8a7660; }
 
-/* archive */
+
 .archive-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
 .cases { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1.2rem; margin: 1rem 0 1.6rem; }
 .case { position: relative; aspect-ratio: 3 / 4; border-radius: 4px; cursor: pointer; overflow: hidden; background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.04) 40%, rgba(0,0,0,.25)), #1a1410; box-shadow: 0 10px 22px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.12); transition: transform .2s; }
@@ -275,7 +275,7 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 .act-tag { font-family: var(--mono); font-size: .72rem; background: rgba(255,179,71,.15); color: var(--led); padding: .05em .4em; border-radius: 3px; }
 .words-tbl { max-height: 260px; overflow-y: auto; margin: .6rem 0; }
 
-/* studio */
+
 .studio { padding: 1.4rem 1.6rem; }
 .studio-head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .studio-tools { background: rgba(0,0,0,.06); padding: .5rem; border-radius: 4px; }
@@ -289,7 +289,7 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 .spk.on { box-shadow: 0 0 0 2px var(--spk); font-weight: 600; }
 .busy { color: var(--accent); font-style: italic; display: inline-flex; gap: .4rem; align-items: center; }
 
-/* shelf / custom */
+
 .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.6rem 1.2rem; padding: 1.4rem; border-radius: 8px; background: repeating-linear-gradient(180deg, transparent 0 calc(100% - 14px), rgba(0,0,0,.3) calc(100% - 14px) 100%), linear-gradient(175deg, var(--wood3), var(--wood1)); box-shadow: inset 0 8px 20px rgba(0,0,0,.5); }
 .shelf-item { display: flex; flex-direction: column; gap: .5rem; }
 .shelf-item .cassette { width: 100%; filter: drop-shadow(0 8px 10px rgba(0,0,0,.6)); transition: transform .2s; }
@@ -299,7 +299,7 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 .custom .card { max-width: none; } .preview { display: flex; flex-direction: column; gap: 1rem; }
 .mini-deck { padding: 14px; } .mini-deck .window { min-height: 200px; } .mini-deck .lcd, .mini-deck .keys { margin-top: 10px; }
 
-/* modal & toasts */
+
 .modal-back { position: fixed; inset: 0; background: rgba(10,6,3,.72); display: grid; place-items: center; z-index: 100; padding: 1rem; backdrop-filter: blur(2px); }
 .modal { position: relative; width: min(560px, 100%); max-height: 92vh; overflow-y: auto; padding: 1.6rem 1.8rem; }
 .modal.wide { width: min(980px, 100%); }
@@ -310,7 +310,7 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 .toast.out { opacity: 0; transform: translateX(20px); }
 @keyframes tin { from { opacity: 0; transform: translateY(10px); } }
 
-/* responsive */
+
 @media (max-width: 1100px) { .bays { grid-template-columns: 1fr 1fr; } .bay.master { grid-column: 1 / -1; } }
 @media (max-width: 760px) {
   body { font-size: 17px; }
@@ -325,6 +325,13 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
   .card { padding: 1.4rem; }
 }
 @media (prefers-reduced-motion: reduce) { .cassette.spin .reel, .led.on.red { animation: none; } .strip { transition: none; } }
+.auth-card h1 { margin-bottom: .2em; }
+.auth-switch { display: grid; grid-template-columns: 1fr 1fr; margin: 1.2rem 0 .6rem; border: 1px solid #b8a682; border-radius: 6px; overflow: hidden; }
+.auth-switch button { background: transparent; border: 0; padding: .55em; cursor: pointer; font-variant: small-caps; text-transform: lowercase; letter-spacing: .12em; color: var(--ink-soft); font-size: 1rem; }
+.auth-switch button.on { background: var(--accent); color: #f6ecd8; box-shadow: inset 0 2px 4px rgba(0,0,0,.25); }
+.btn.full { width: 100%; margin-top: .3rem; }
+.dev-kit { max-width: none; margin-top: 1.6rem; }
+pre.code { background: #1a120c; color: #ecdfc6; padding: 1rem; border-radius: 4px; font-family: var(--mono); font-size: .76rem; line-height: 1.45; max-height: 70vh; overflow: auto; white-space: pre-wrap; word-break: break-word; }
 
 </style>
 </head>
@@ -332,19 +339,14 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 <div id="app"><section class="center-screen"><div class="warm">Warming the valves…</div></section></div>
 <noscript><p style="padding:2rem">The Magnetic Library needs JavaScript.</p></noscript>
 <script>
-/* =====================================================================
-   THE MAGNETIC LIBRARY — single-file client
-   Archival reconstruction narrator. No paid AI services are used.
-   ===================================================================== */
 'use strict';
 
-/* ---------- CONFIG: fill these in before deploying ---------- */
 const CONFIG = {
-  SUPABASE_URL: '',                 // e.g. https://abcdefgh.supabase.co
-  SUPABASE_ANON_KEY: '',            // Project Settings → API → anon public key (safe to ship)
-  PAYMENT_LINK: '',                 // optional Stripe Payment Link; the user id is appended automatically
+  SUPABASE_URL: '',
+  SUPABASE_ANON_KEY: '',
+  PAYMENT_LINK: '',
   PRICE_LABEL: 'Listening-room membership',
-  USER_EMAIL_DOMAIN: 'users.magneticlibrary.app', // usernames become <name>@this-domain behind the scenes
+  USER_EMAIL_DOMAIN: 'users.magneticlibrary.app',
   BUCKET: 'library',
 };
 try {
@@ -362,7 +364,6 @@ const CDN = {
   transformers: 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2',
 };
 
-/* ---------- global state ---------- */
 const S = {
   user: null, profile: null, tab: 'deck', sub: 'reading',
   books: [], voices: [], samples: {}, samplesRev: {},
@@ -372,7 +373,6 @@ const S = {
 };
 let sb = null;
 
-/* ---------- small utilities ---------- */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -438,8 +438,38 @@ function downloadBlob(blob, name) {
 }
 const safeName = (s) => String(s || 'untitled').replace(/[^\p{L}\p{N} _.-]+/gu, '').trim().replace(/\s+/g, '-').slice(0, 80) || 'untitled';
 
-/* ---------- toasts & modals ---------- */
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = [], d = new Date();
+  const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint32(42, offset, true);
+    central.push(ch.buffer, name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.byteLength, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
+}
+
+const BACKEND_WORDS = /supabase|postgres|pgrst|row-level|policy|relation|schema|jwt|bucket|\bsql\b|violates|constraint|function |storage api|edge function|fetch failed|failed to fetch/i;
 function toast(msg, kind = 'info', ms = 5200) {
+  msg = String(msg ?? '');
+  if (kind === 'err' && BACKEND_WORDS.test(msg) && !(S.profile && S.profile.is_dev)) msg = 'Something went wrong on our side. Please try again in a moment.';
   let box = $('#toasts');
   if (!box) { box = document.createElement('div'); box.id = 'toasts'; document.body.appendChild(box); }
   const t = document.createElement('div');
@@ -497,7 +527,6 @@ function pickFiles(accept, multiple = false) {
   });
 }
 
-/* ---------- IndexedDB (local audio cache, render cache, checkpoints) ---------- */
 const IDB = (() => {
   let dbp = null;
   const STORES = ['renderMeta', 'renderBlob', 'books', 'audio', 'jobs', 'kv'];
@@ -530,8 +559,7 @@ const IDB = (() => {
   };
 })();
 
-/* ---------- Supabase layer ---------- */
-async function initSupabase() {
+async function initBackend() {
   if (!CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) return false;
   await loadScript(CDN.supabase);
   sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
@@ -548,7 +576,7 @@ function friendlyAuthError(e) {
   if (/database error saving new user/i.test(m)) return 'That username is taken or not allowed.';
   if (/password/i.test(m) && /characters/i.test(m)) return 'Passwords need at least 6 characters.';
   if (/rate limit/i.test(m)) return 'Too many attempts — wait a minute and try again.';
-  return m;
+  return 'We couldn’t reach the library just now. Please try again in a moment.';
 }
 async function sbUpload(path, blob, type) {
   const { error } = await sb.storage.from(CONFIG.BUCKET).upload(path, blob, { upsert: true, contentType: type || blob.type || 'application/octet-stream' });
@@ -579,9 +607,6 @@ async function logAct(action, detail = {}) {
   try { if (sb && S.user) await sb.from('activity').insert({ action, detail }); } catch (e) { /* best effort */ }
 }
 
-/* =====================================================================
-   DSP — all non-generative: decoding, trimming, varispeed, fades, gates
-   ===================================================================== */
 async function decodeToMono(ab, rate = RATE) {
   const ctx = new OfflineAudioContext(1, 1, rate); // decodeAudioData resamples to the context rate
   const buf = await new Promise((res, rej) => {
@@ -615,7 +640,6 @@ function percentile(arr, p) {
 const toDb = (v) => 20 * Math.log10(v + 1e-9);
 function rmsOf(x, a = 0, b = x.length) { let s = 0; for (let i = a; i < b; i++) s += x[i] * x[i]; return Math.sqrt(s / Math.max(1, b - a)); }
 
-/** Energy-based speech region detection with hysteresis. Returns [{s,e}] in seconds. */
 function detectSpeech(x, rate, { minSpeech = 0.25, minGap = 0.22, pad = 0.05, sens = 1 } = {}) {
   const { rms, hop } = frameRms(x, rate, 20);
   if (!rms.length) return [];
@@ -641,7 +665,6 @@ function qualityOf(x, rate) {
   const label = snr >= 38 ? 'studio' : snr >= 28 ? 'good' : snr >= 18 ? 'fair' : 'poor';
   return { db: Math.round(snr * 10) / 10, label };
 }
-/** Normalised autocorrelation pitch estimate (Hz) over a time range; 0 when unvoiced. */
 function pitchAt(x, rate, s, e) {
   const a = Math.max(0, Math.floor(s * rate)), b = Math.min(x.length, Math.floor(e * rate)), len = b - a;
   if (len < 700) return 0;
@@ -698,14 +721,12 @@ function spectralCentroid(x, rate, s, e) {
   }
   return cnt ? tot / cnt : 0;
 }
-/** Tape-style varispeed: ratio > 1 raises pitch and shortens, like speeding up a capstan. */
 function varispeed(x, ratio) {
   if (Math.abs(ratio - 1) < 0.004) return x;
   const n = Math.max(1, Math.floor(x.length / ratio)), out = new Float32Array(n);
   for (let i = 0; i < n; i++) { const p = i * ratio, k = Math.floor(p), f = p - k; const a = x[k] || 0, b = x[k + 1] || 0; out[i] = a + (b - a) * f; }
   return out;
 }
-/** Overlap-add time stretch (WSOLA-lite) — changes duration without changing pitch. */
 function timeStretch(x, rate, factor) {
   if (Math.abs(factor - 1) < 0.02 || x.length < rate * 0.06) return x;
   const W = Math.round(rate * 0.03), Ha = Math.round(W / 2), Hs = Math.round(Ha * factor), tol = Math.round(rate * 0.006);
@@ -773,7 +794,6 @@ async function encodeAudio(x, rate = RATE) {
   if (await ensureLame()) { const m = mp3Stream(rate); m.push(x); return m.end(); }
   return encodeWAV(x, rate);
 }
-/** Basic, non-generative clean-up: 80 Hz high-pass plus a soft downward noise gate. */
 async function basicCleanup(x, rate) {
   const ctx = new OfflineAudioContext(1, x.length, rate);
   const b = ctx.createBuffer(1, x.length, rate); b.copyToChannel(x, 0);
@@ -791,9 +811,6 @@ async function basicCleanup(x, rate) {
   return out;
 }
 
-/* =====================================================================
-   TEXT — sentences, segments, tokens, numbers
-   ===================================================================== */
 const ABBR = new Set('mr mrs ms dr st prof sr jr vs etc cf vol ch no pp fig mt col gen lt capt sgt rev hon inc ltd co jan feb mar apr jun jul aug sep sept oct nov dec op ed eds esp approx dept est ca al'.split(' '));
 function splitSentences(text) {
   const out = []; let start = 0, m;
@@ -888,7 +905,6 @@ function numberWords(raw) {
   return w;
 }
 const ABBR_SPOKEN = { mr: 'mister', mrs: 'missus', dr: 'doctor', st: 'saint', prof: 'professor', jr: 'junior', sr: 'senior', vs: 'versus', etc: 'et cetera', capt: 'captain', gen: 'general', lt: 'lieutenant', sgt: 'sergeant', mt: 'mount' };
-/** Text → spoken units. Each unit is one word to find in the archive, tied to a display token for highlighting. */
 function speechUnits(text, toks, lexicon = {}) {
   const units = [];
   toks.forEach((t, i) => {
@@ -907,9 +923,6 @@ function speechUnits(text, toks, lexicon = {}) {
 }
 const COMMON_WORDS = ('the of and to a in is it you that he was for on are with as i his they be at one have this from or had by not word but what some we can out other were all there when up use your how said an each she which do their time if will way about many then them write would like so these her long make thing see him two has look more day could go come did number sound no most people my over know water than call first who may down side been now find any new work part take get place made live where after back little only round man year came show every good me give our under name very through just form sentence great think say help low line differ turn cause much mean before move right boy old too same tell does set three want air well also play small end put home read hand port large spell add even land here must big high such follow act why ask men change went light kind off need house picture try us again animal point mother world near build self earth father').split(' ');
 
-/* =====================================================================
-   PDF — PDF.js (worker-based parsing) + optional Tesseract OCR
-   ===================================================================== */
 async function ensurePdfJs() {
   if (window.pdfjsLib) return;
   await loadScript(CDN.pdfjs);
@@ -982,7 +995,6 @@ async function extractPdf(file, { ocr = false, onProgress } = {}) {
   doc.destroy();
   return struct;
 }
-/** Turns positioned lines into chapters → paragraphs, stripping running heads and page numbers. */
 function buildStructure(pages, meta, fileName) {
   const sizeW = new Map();
   for (const p of pages) for (const l of p.lines) if (l.size > 0) { const k = Math.round(l.size * 2) / 2; sizeW.set(k, (sizeW.get(k) || 0) + l.text.length); }
@@ -1058,9 +1070,6 @@ function structCounts(struct) {
   return { chapters: struct.chapters.filter((c) => !c.skip).length, segments: segs.length, chars: segs.reduce((a, s) => a + s.text.length, 0) };
 }
 
-/* =====================================================================
-   VOICE ARCHIVE — profiles, recordings, transcription, alignment
-   ===================================================================== */
 async function fetchVoices() {
   const { data, error } = await sb.from('voices').select('*').eq('owner', S.user.id).order('created_at');
   if (error) throw error;
@@ -1224,7 +1233,6 @@ async function importVoiceFile(file, onProg) {
   return v;
 }
 
-/* ---------- transcription (optional, runs locally, free) ---------- */
 let _asr = null;
 async function ensureWhisper(onStatus) {
   if (_asr) return _asr;
@@ -1248,7 +1256,6 @@ async function transcribeSample(sample, onStatus) {
     .filter((w) => w[0] && isFinite(w[1]) && w[2] > w[1]);
   return { text: String(out.text || '').trim(), words };
 }
-/** Rough forced alignment without models: spreads words over voiced time by length, snapping to energy dips. */
 function alignManual(pcm, rate, transcript) {
   const words = transcript.match(/\S+/g) || [];
   if (!words.length) return [];
@@ -1269,9 +1276,6 @@ function alignManual(pcm, rate, transcript) {
   return out;
 }
 
-/* =====================================================================
-   SEGMENT INDEX — words, prefixes and suffixes of the archive
-   ===================================================================== */
 function buildIndex(samples) {
   const map = new Map(), sw = new Map(), byId = new Map();
   for (const s of samples) {
@@ -1298,7 +1302,6 @@ function buildIndex(samples) {
   }
   return { map, sw, byId, pre, suf };
 }
-/** Compound fallback: "sunlight" → "sun" + "light" when both exist as whole recordings. */
 function wordBreak(w, map) {
   const n = w.length, best = new Array(n + 1).fill(null); best[0] = [];
   for (let i = 0; i < n; i++) {
@@ -1310,7 +1313,6 @@ function wordBreak(w, map) {
   }
   return best[n] && best[n].length >= 2 ? best[n] : null;
 }
-/** Fragment fallback: slices the start or end of other recorded words (orthographic, not phonemic). */
 function fragBreak(w, idx) {
   const n = w.length, best = new Array(n + 1).fill(null); best[0] = { cost: 0, parts: [] };
   for (let i = 0; i < n; i++) {
@@ -1335,9 +1337,6 @@ function coverageReport(idx, tokens) {
   return { total, covered, unique: uniq.size, uniqueCovered: uniq.size - missing.length, missing, fragCoverable: frag };
 }
 
-/* =====================================================================
-   ARCHIVAL RECONSTRUCTION ENGINE — unit selection + concatenation
-   ===================================================================== */
 class ArchivalEngine {
   constructor(voice, samples, opts = {}) {
     this.voice = voice;
@@ -1369,7 +1368,6 @@ class ArchivalEngine {
     }
     if (cands.length === 1) return { ref: cands[0], method: 'exact', alts: 1 };
     const med = median(cands.map((c) => c.dur));
-    // Lookahead: a take followed in its original recording by the next word we need lets the next word continue naturally.
     const leads = (c) => next && (this.idx.sw.get(c.sid) || [])[c.wi + 1] === next;
     const scored = cands.map((c) => ({ c, sc: Math.abs(Math.log(c.dur / med)) + 0.12 * rand01(word + c.sid + c.wi) + this.qualPenalty(c.sid) + (prev && prev.ref && prev.ref.sid === c.sid ? -0.05 : 0) + (leads(c) ? -0.6 : 0) }));
     scored.sort((a, b) => a.sc - b.sc);
@@ -1465,9 +1463,6 @@ class ArchivalEngine {
   }
 }
 
-/* =====================================================================
-   RENDER QUEUE — checkpointed, resumable, retried, cached per segment
-   ===================================================================== */
 const R = { running: false, stopReq: false, done: 0, total: 0, failed: [], current: null, msDone: 0, charsDone: 0, charsLeft: 0, label: '' };
 function segKey(seg, voiceId = S.book && S.book.voice_id) { return `${S.user.id}|arch2|${voiceId || 'none'}|${cyrb53(seg.kind + '|' + (seg.paraEnd ? 1 : 0) + '|' + seg.text)}`; }
 async function loadRenderMeta() {
@@ -1584,7 +1579,6 @@ async function saveRenderStats() {
 }
 function etaSeconds() { if (!R.charsDone || R.msDone < 1500) return null; return (R.msDone / R.charsDone) * R.charsLeft / 1000; }
 
-/* ---------- export ---------- */
 async function collectRendered(segs) {
   const have = segs.filter((s) => S.renderMeta.has(S.keys[s.gi]));
   const missing = segs.length - have.length;
@@ -1643,9 +1637,6 @@ async function archiveChapterToCloud(ci) {
   logAct('tape_archive', { book: S.book.title, chapter: ci + 1 });
 }
 
-/* =====================================================================
-   PLAYER — progressive playback of recorded segments on a cassette transport
-   ===================================================================== */
 const REEL = { L: [78, 80], R: [162, 80], min: 12, max: 27 };
 const Player = {
   el: null, gi: 0, offset: 0, playing: false, waiting: false, rate: 1, url: null, loaded: -1,
@@ -1912,9 +1903,6 @@ function setCounter(id, sec) {
   el.querySelectorAll('.strip').forEach((st, i) => { st.style.transform = `translateY(${-digits[i]}em)`; });
 }
 
-/* =====================================================================
-   CANVAS DRAWING — waveform, spectrogram, magnetic speaker tape
-   ===================================================================== */
 function fitCanvas(c, h) {
   const dpr = Math.min(2, window.devicePixelRatio || 1), w = Math.max(200, c.clientWidth || c.parentElement.clientWidth || 600);
   c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.height = h + 'px';
@@ -1984,9 +1972,6 @@ function drawTape(c, dur, segs, v0, v1, target, sel) {
   g.strokeStyle = cssVar('--led', '#ffb347'); g.lineWidth = 2; g.strokeRect(X(v0), 2, Math.max(3, X(v1) - X(v0)), h - 4);
 }
 
-/* =====================================================================
-   SPEAKER ISOLATION STUDIO (heuristic, model-free)
-   ===================================================================== */
 const ST = { pcm: null, name: '', dur: 0, v0: 0, v1: 30, segs: [], sel: -1, target: 'A', cursor: 0, src: null, ctx: null, busy: '' };
 async function studioLoad(file) {
   if (file.size > 150 * 1048576) toast('Large file — decoding may take a while and use a lot of memory.', 'warn');
@@ -2107,9 +2092,6 @@ async function studioSave(voiceId, tags, mergeGap) {
   renderStudioStatus();
 }
 
-/* =====================================================================
-   THEMES & CASSETTE ARTWORK
-   ===================================================================== */
 const WOODS = { walnut: ['#5b3a24', '#3a2416', '#7b5236'], rosewood: ['#5a1f1a', '#351110', '#7a2e24'], oak: ['#9a6b3e', '#6e4a28', '#b88552'], teak: ['#8a5a2b', '#5f3c1b', '#a87039'], ebony: ['#2a201b', '#14100d', '#3b2f28'] };
 const METALS = { aluminium: ['#4a4c50', '#2c2d30', '#6b6e73'], black: ['#262628', '#151516', '#3a3a3d'], champagne: ['#7a6a4a', '#4f4430', '#a08d62'], silver: ['#9a9da2', '#6c6f74', '#c4c7cb'] };
 const LEDS = { amber: '#ffb347', green: '#8dff9e', ice: '#9fd8ff', red: '#ff6a5c', cream: '#f4ead4' };
@@ -2166,59 +2148,65 @@ function cassetteSVG(o = {}) {
 </svg>`;
 }
 
-/* =====================================================================
-   BOOT, AUTH, PAYWALL
-   ===================================================================== */
 async function boot() {
   applyTheme(); Player.init(); bindEvents();
   let ok = false;
-  try { ok = await initSupabase(); }
-  catch (e) { $('#app').innerHTML = `<section class="center-screen"><div class="paper card"><h2>The machine won’t power on</h2><p>The Supabase library could not load. Check your connection and refresh.</p></div></section>`; return; }
-  if (!ok) { renderSetup(); return; }
+  try { ok = await initBackend(); } catch (e) { S.closed = 'offline'; renderAuth(); return; }
+  if (!ok) { S.closed = true; if (location.hash === '#connect') renderConnect(); else renderAuth(); return; }
   sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { S.user = null; S.profile = null; S.book = null; Player.eject(); renderAuth(); } });
   const { data } = await sb.auth.getSession();
   if (data && data.session) await afterLogin(data.session.user); else renderAuth();
 }
-function renderSetup() {
-  $('#app').innerHTML = `<section class="center-screen"><form class="paper card wide" id="setupForm">
-    <h1 class="display">The Magnetic Library</h1><p class="lede">Connect a Supabase project to power the machine.</p>
-    <p class="muted">For public deployment, paste these values into the <code>CONFIG</code> block at the top of <code>index.html</code>. Saving them here only configures this browser, which is handy for a first test.</p>
-    <label><span>Project URL</span><input name="url" placeholder="https://xxxx.supabase.co" required></label>
-    <label><span>Anon public key</span><input name="key" required></label>
-    <label><span>Stripe Payment Link (optional)</span><input name="pay" placeholder="https://buy.stripe.com/..."></label>
-    <div class="row end"><button class="btn">Save & power on</button></div></form></section>`;
-  $('#setupForm').onsubmit = (e) => {
+function renderConnect() {
+  $('#app').innerHTML = `<section class="center-screen"><form class="paper card" id="connectForm">
+    <h2 class="display">Connect this browser</h2>
+    <label><span>Project URL</span><input name="url" required></label>
+    <label><span>Public key</span><input name="key" required></label>
+    <label><span>Payment link (optional)</span><input name="pay"></label>
+    <div class="row end"><button class="btn">Connect</button></div></form></section>`;
+  $('#connectForm').onsubmit = (e) => {
     e.preventDefault(); const f = e.target;
     localStorage.setItem('ml.config', JSON.stringify({ SUPABASE_URL: f.url.value.trim().replace(/\/$/, ''), SUPABASE_ANON_KEY: f.key.value.trim(), PAYMENT_LINK: f.pay.value.trim() }));
-    location.reload();
+    location.hash = ''; location.reload();
   };
 }
-function renderAuth(msg = '') {
+function renderAuth(msg = '', mode = S.authMode || 'in', keepUser = '') {
+  S.authMode = mode;
+  const up = mode === 'up';
   $('#app').innerHTML = `<section class="auth">
-    <div class="auth-machine">${cassetteSVG({ title: 'The Magnetic Library', sub: 'Archival narration · side A', cls: 'auth-tape', spin: true })}</div>
-    <form class="paper card" id="authForm" autocomplete="on">
+    <div class="auth-machine">${cassetteSVG({ title: 'The Magnetic Library', sub: up ? 'A new tape for you' : 'Welcome back', cls: 'auth-tape', spin: true })}</div>
+    <div class="paper card auth-card">
       <h1 class="display">The Magnetic Library</h1>
       <p class="lede">A private listening room that turns whole books into tapes read in a voice you have archived.</p>
-      <label><span>Username</span><input name="u" autocomplete="username" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_.\\-]{3,24}"></label>
-      <label><span>Password</span><input name="p" type="password" autocomplete="current-password" required minlength="6"></label>
-      <p class="err" id="authMsg">${esc(msg)}</p>
-      <div class="row"><button class="btn" name="mode" value="in">Sign in</button><button class="btn ghost" name="mode" value="up">Create account</button></div>
-      <p class="fine">Usernames: 3–24 letters, numbers, dot, dash or underscore. Activity on this site is logged and visible to the site administrator.</p>
-    </form></section>`;
+      <div class="auth-switch" role="tablist">
+        <button type="button" role="tab" class="${up ? '' : 'on'}" data-mode="in" aria-selected="${!up}">Sign in</button>
+        <button type="button" role="tab" class="${up ? 'on' : ''}" data-mode="up" aria-selected="${up}">Create account</button>
+      </div>
+      <form id="authForm" autocomplete="on">
+        <label><span>Username</span><input name="u" value="${esc(keepUser)}" autocomplete="username" required minlength="3" maxlength="24" autocapitalize="none" spellcheck="false"></label>
+        <label><span>Password</span><input name="p" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" required minlength="6"></label>
+        ${up ? '<label><span>Confirm password</span><input name="p2" type="password" autocomplete="new-password" required minlength="6"></label>' : ''}
+        <p class="err" id="authMsg" role="alert">${esc(msg)}</p>
+        <button class="btn big full">${up ? 'Create my account' : 'Sign in'}</button>
+        <p class="fine">${up ? 'Choose a username of 3–24 letters, numbers, dots, dashes or underscores, and a password of at least 6 characters. Activity in the library is logged and visible to the library’s administrator.' : 'New here? Choose “Create account” above.'}</p>
+      </form>
+    </div></section>`;
+  $$('.auth-switch [data-mode]').forEach((b) => b.addEventListener('click', () => renderAuth('', b.dataset.mode, ($('#authForm') || {}).u ? $('#authForm').u.value : '')));
   const f = $('#authForm');
-  let mode = 'in';
-  f.querySelectorAll('button[name=mode]').forEach((b) => b.addEventListener('click', () => { mode = b.value; }));
+  setTimeout(() => { const el = keepUser ? f.p : f.u; if (el && el.focus) el.focus(); }, 50);
   f.onsubmit = async (e) => {
     e.preventDefault();
     const u = f.u.value.trim().toLowerCase(), p = f.p.value, m = $('#authMsg');
+    if (S.closed) { m.textContent = S.closed === 'offline' ? 'We couldn’t reach the library. Check your connection and refresh the page.' : 'The library isn’t open yet. Please check back soon.'; return; }
     if (!USER_RE.test(u)) { m.textContent = 'Usernames are 3–24 characters: letters, numbers, dot, dash or underscore.'; return; }
-    m.textContent = mode === 'in' ? 'Threading the tape…' : 'Cutting a new account…';
-    f.querySelectorAll('button').forEach((b) => (b.disabled = true));
+    if (up && p !== f.p2.value) { m.textContent = 'The two passwords don’t match.'; return; }
+    m.textContent = up ? 'Cutting a new tape…' : 'Threading the tape…';
+    f.querySelectorAll('button,input').forEach((b) => (b.disabled = true));
     try {
-      if (mode === 'up') {
+      if (up) {
         const { data, error } = await sb.auth.signUp({ email: toEmail(u), password: p, options: { data: { username: u } } });
         if (error) throw error;
-        if (!data.session) throw new Error('Account created, but Supabase is waiting for e-mail confirmation. In Supabase → Authentication → Sign In / Providers → Email, turn off “Confirm email”, then sign in.');
+        if (!data.session) throw new Error('Your account was created but couldn’t be opened yet. Please try signing in in a minute.');
         await afterLogin(data.user, true);
       } else {
         const { data, error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
@@ -2226,8 +2214,8 @@ function renderAuth(msg = '') {
         await afterLogin(data.user);
       }
     } catch (err) {
-      m.textContent = friendlyAuthError(err);
-      f.querySelectorAll('button').forEach((b) => (b.disabled = false));
+      f.querySelectorAll('button,input').forEach((b) => (b.disabled = false));
+      m.textContent = /couldn’t be opened yet/.test(err.message || '') ? err.message : friendlyAuthError(err);
     }
   };
 }
@@ -2236,7 +2224,7 @@ async function afterLogin(user, fresh = false) {
   $('#app').innerHTML = `<section class="center-screen"><div class="warm"><i class="led on"></i> Warming the valves…</div></section>`;
   const { data: prof, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
   if (error || !prof) {
-    $('#app').innerHTML = `<section class="center-screen"><div class="paper card"><h2>No profile found</h2><p>Your account exists but has no profile row. Make sure <code>schema.sql</code> was run in Supabase before accounts were created.</p><button class="btn" data-act="signout">Sign out</button></div></section>`;
+    $('#app').innerHTML = `<section class="center-screen"><div class="paper card"><h2>Your shelf isn’t ready</h2><p>We couldn’t open your account just now. Please try again in a moment.</p><button class="btn" data-act="signout">Sign out</button></div></section>`;
     return;
   }
   S.profile = prof; applyTheme();
@@ -2266,9 +2254,6 @@ async function fetchBooks() {
   S.books = data || [];
 }
 
-/* =====================================================================
-   SHELL & TABS
-   ===================================================================== */
 const TABS = [
   { id: 'deck', label: 'Deck' }, { id: 'archive', label: 'Voice archive' }, { id: 'studio', label: 'Isolation studio' },
   { id: 'shelf', label: 'Shelf' }, { id: 'custom', label: 'Customise' }, { id: 'dev', label: 'Dev console', dev: true },
@@ -2288,9 +2273,6 @@ function renderView() {
   ({ deck: renderDeck, archive: renderArchive, studio: renderStudio, shelf: renderShelf, custom: renderCustom, dev: renderDev })[S.tab]();
 }
 
-/* =====================================================================
-   DECK
-   ===================================================================== */
 const SUBS = [['reading', 'Reading'], ['manuscript', 'Manuscript'], ['render', 'Recording'], ['audition', 'Audition'], ['bookmarks', 'Bookmarks'], ['export', 'Export']];
 function curVoice() { return S.book ? S.voices.find((v) => v.id === S.book.voice_id) : null; }
 function renderDeck() {
@@ -2486,14 +2468,11 @@ function panelExport() {
       <div class="row"><button class="btn" data-act="ex-mp3">MP3</button><button class="btn" data-act="ex-wav">WAV</button><button class="btn ghost" data-act="ex-m4b">M4B kit (whole book)</button></div>
       <p class="muted">MP3 and WAV are assembled in your browser. Whole-book WAV files are very large — prefer chapters. <b>M4B</b> needs FFmpeg, which isn’t bundled in a single web page: the kit downloads the book MP3 plus a chapter-marker file with the one-line free FFmpeg command that turns them into an M4B with chapters.</p>
     </div><div>
-      <h3>Cloud tapes</h3><p class="muted">Finished chapters you archived (☁ on the Recording tab) are kept in your Supabase storage and can be downloaded on any device.</p>
+      <h3>Cloud tapes</h3><p class="muted">Finished chapters you archived (☁ on the Recording tab) are kept on your cloud shelf and can be downloaded on any device.</p>
       <div id="tapeList"><button class="btn ghost" data-act="tapes-list">Show cloud tapes</button></div>
     </div></div>`;
 }
 
-/* =====================================================================
-   VOICE ARCHIVE
-   ===================================================================== */
 function voiceCase(v) {
   const smp = S.samples[v.id], rec = smp ? smp.filter((s) => s.kind !== 'reference') : null;
   const dur = rec ? rec.reduce((a, s) => a + (s.duration || 0), 0) : null, al = rec ? rec.filter((s) => s.words && s.words.length).length : null;
@@ -2672,9 +2651,6 @@ async function importAudioFiles(files) {
   renderVoiceDetail(); refreshCases(); paintBayB();
 }
 
-/* =====================================================================
-   STUDIO VIEW
-   ===================================================================== */
 function renderStudio() {
   const v = $('#view'); if (!v || S.tab !== 'studio') return;
   v.innerHTML = `<section class="studio paper">
@@ -2721,9 +2697,6 @@ function renderStudioStatus() {
     </div></div>`;
 }
 
-/* =====================================================================
-   SHELF, CUSTOMISE, DEV
-   ===================================================================== */
 function renderShelf() {
   $('#view').innerHTML = `<section class="shelf-wrap"><h2 class="display">Shelf</h2>
     <div class="shelf">${S.books.map((b) => { const st = b.render_stats || {}; const pct = st.total ? Math.round((st.rendered / st.total) * 100) : 0; return `<article class="shelf-item ${S.book && S.book.id === b.id ? 'on' : ''}">
@@ -2767,7 +2740,10 @@ function renderCustom() {
 }
 async function renderDev() {
   if (!S.profile.is_dev) { S.tab = 'deck'; renderView(); return; }
-  $('#view').innerHTML = `<section class="dev"><div class="row between"><h2 class="display">Dev console</h2><div class="row"><label class="check"><input type="checkbox" data-change="dev-hide" ${S.devHideDev !== false ? 'checked' : ''}> hide my own activity</label><button class="btn ghost sm" data-act="dev-refresh">Refresh</button></div></div><div id="devBody"><p class="muted">Loading every account…</p></div></section>`;
+  $('#view').innerHTML = `<section class="dev"><div class="row between"><h2 class="display">Dev console</h2><div class="row"><label class="check"><input type="checkbox" data-change="dev-hide" ${S.devHideDev !== false ? 'checked' : ''}> hide my own activity</label><button class="btn ghost sm" data-act="dev-refresh">Refresh</button></div></div><div id="devBody"><p class="muted">Loading every account…</p></div>
+    <div class="paper card dev-kit" id="kitBox"><div class="row between"><h3>Deployment kit</h3><span class="badge">DEV ONLY</span></div>
+      <p class="muted">Setup guide, database schema and payment webhook, stored in the database where only the dev account can read them. Members never see this.</p>
+      <button class="btn" data-act="kit-load">Open the kit</button></div></section>`;
   await devLoad();
 }
 async function devLoad() {
@@ -2815,9 +2791,6 @@ function paintDev() {
     <p class="fine">Showing the latest 1,000 events. The dev account can read every user’s profile, books, voice archives and activity through row-level security.</p>`;
 }
 
-/* =====================================================================
-   BOOK OPERATIONS
-   ===================================================================== */
 async function importPdf(file) {
   if (!requireEntitled()) return;
   if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { toast('That file isn’t a PDF.', 'err'); return; }
@@ -2892,9 +2865,6 @@ async function saveStruct() {
 }
 function markDirty() { S.structDirty = true; const b = $('[data-act="ms-save"]'); if (b) { b.textContent = 'Save changes'; b.classList.remove('ghost'); } const r = $('[data-act="ms-revert"]'); if (r) r.disabled = false; }
 
-/* =====================================================================
-   EVENTS
-   ===================================================================== */
 async function lexAdd(word, resp) {
   const v = curVoice() || S.voices.find((x) => x.id === S.voiceSel);
   if (!v) { toast('Load a voice first.', 'err'); return; }
@@ -3093,6 +3063,17 @@ const ACTIONS = {
   'theme-save': async () => { const { error } = await sb.from('profiles').update({ theme: S.profile.theme }).eq('id', S.user.id); if (error) toast(error.message, 'err'); else { toast('Your machine has been refinished.'); logAct('theme_change', {}); } },
   'theme-reset': () => { S.profile.theme = {}; applyTheme(); renderCustom(); },
   'dev-refresh': () => devLoad(),
+  'kit-load': () => kitLoad(),
+  'kit-view': (el) => { const f = S.kit.find((x) => x.name === el.dataset.name); if (f) openModal(`<h3>${esc(f.name)}</h3><pre class="code">${esc(f.content)}</pre>`, { wide: true }); },
+  'kit-dl': async (el) => {
+    const n = el.dataset.name;
+    if (n === 'index.html') { downloadBlob(new Blob([await liveIndexHtml()], { type: 'text/html' }), 'index.html'); return; }
+    const f = S.kit.find((x) => x.name === n); if (f) downloadBlob(new Blob([f.content], { type: 'text/plain' }), n.split('/').pop());
+  },
+  'kit-zip': async () => {
+    const files = [{ name: 'magnetic-library/index.html', data: await liveIndexHtml() }, ...S.kit.map((f) => ({ name: 'magnetic-library/' + f.name, data: f.content }))];
+    downloadBlob(makeZip(files), 'magnetic-library.zip'); logAct('dev_kit_download', {});
+  },
   'dev-sel': (el) => { S.dev.sel = el.dataset.id || null; paintDev(); },
   'dev-paid': async (el) => {
     const id = el.dataset.id, val = el.dataset.v === '1', u = S.dev.profiles.find((x) => x.id === id);
@@ -3101,6 +3082,23 @@ const ACTIONS = {
     if (error) toast(error.message, 'err'); else { logAct(val ? 'dev_grant' : 'dev_revoke', { user: u.username }); devLoad(); }
   },
 };
+async function kitLoad() {
+  const box = $('#kitBox'); if (!box) return;
+  const { data, error } = await sb.from('dev_kit').select('name,content,updated_at').order('name');
+  if (error) { box.querySelector('button').insertAdjacentHTML('afterend', `<p class="err">${esc(error.message)}</p>`); return; }
+  S.kit = data || [];
+  box.innerHTML = `<div class="row between"><h3>Deployment kit</h3><span class="badge">DEV ONLY</span></div>
+    <p class="muted">Connected to <code>${esc(CONFIG.SUPABASE_URL || 'this browser only')}</code>. Members never see this section.</p>
+    <table class="tbl"><thead><tr><th>File</th><th>Size</th><th>Updated</th><th></th></tr></thead><tbody>
+    <tr><td>index.html <small class="muted">(the live site file)</small></td><td>—</td><td>—</td><td class="nowrap"><button class="mini-btn" data-act="kit-dl" data-name="index.html">download</button></td></tr>
+    ${S.kit.map((f) => `<tr><td>${esc(f.name)}</td><td>${fmtBytes(new Blob([f.content]).size)}</td><td>${fmtDate(f.updated_at)}</td><td class="nowrap"><button class="mini-btn" data-act="kit-view" data-name="${esc(f.name)}">view</button><button class="mini-btn" data-act="kit-dl" data-name="${esc(f.name)}">download</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">The kit is empty — re-run the schema to restore it.</td></tr>'}
+    </tbody></table>
+    <div class="row"><button class="btn" data-act="kit-zip">Download everything (.zip)</button></div>`;
+}
+async function liveIndexHtml() {
+  try { const r = await fetch(location.href.split('#')[0], { cache: 'no-store' }); if (r.ok) return await r.text(); } catch (e) { /* ignore */ }
+  return '<!doctype html>' + document.documentElement.outerHTML;
+}
 const CHANGES = {
   'voice-select': (el) => setBookVoice(el.value),
   speed: (el) => Player.setRate(+el.value), sleep: (el) => Player.setSleep(el.value),
