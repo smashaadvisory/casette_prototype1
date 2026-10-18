@@ -332,6 +332,33 @@ span.m-exact, span.m-continuation, span.m-pinned, span.m-compound, span.m-fragme
 .btn.full { width: 100%; margin-top: .3rem; }
 .dev-kit { max-width: none; margin-top: 1.6rem; }
 pre.code { background: #1a120c; color: #ecdfc6; padding: 1rem; border-radius: 4px; font-family: var(--mono); font-size: .76rem; line-height: 1.45; max-height: 70vh; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.addbar { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-bottom: 1rem; }
+.add-opt { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: .7rem; align-items: center; text-align: left; padding: .8rem 1rem; border-radius: 8px; border: 1px solid #c9b896; background: linear-gradient(#fffaf0, #f1e7cf); cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 #b8a682; transition: transform .06s; }
+.add-opt:active { transform: translateY(2px); box-shadow: 0 1px 0 #b8a682; }
+.add-opt i { grid-row: 1 / 3; font-style: normal; font-size: 1.6rem; width: 2.2rem; height: 2.2rem; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--paper); }
+.add-opt.rec i { background: #9c1f19; color: #ffdcd6; }
+.add-opt b { font-weight: 600; font-size: 1.05rem; } .add-opt span { font-size: .8rem; color: #6a5440; line-height: 1.25; }
+.ready { background: rgba(0,0,0,.04); border-radius: 6px; padding: .6rem .9rem; margin-bottom: 1rem; }
+.ready .row { margin: .2rem 0; }
+.drawer-filter { margin-bottom: .6rem; }
+.drawer-empty { grid-column: 1 / -1; color: #e6d9bb; text-align: center; font-style: italic; padding: 1.4rem; margin: 0; }
+.tag { font-family: var(--mono); font-size: .58rem; padding: 0 .3em; border-radius: 3px; }
+.ok-tag { background: #cfe6c6; color: #234a1c; } .need-tag { background: #f4dfae; color: #5a3d07; } .busy-tag { background: #d7e4f0; color: #20405e; animation: blink 1.4s infinite; }
+.rec-modal { width: min(760px, 100%); }
+.rec-switch { margin: .4rem 0 1rem; }
+blockquote.prompt { font-size: 1.6rem; line-height: 1.4; font-style: italic; margin: .8rem 0 1.2rem; padding: 1rem 1.2rem; border-left: 4px solid var(--accent); background: #fbf5e7; border-radius: 0 6px 6px 0; }
+.rec-deck { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin: .6rem 0; }
+.rec-btn { border: 0; border-radius: 99px; padding: .7em 1.6em; font-size: 1.1rem; cursor: pointer; background: #9c1f19; color: #fff3ee; box-shadow: 0 3px 0 #5a0f0b; letter-spacing: .04em; }
+.rec-btn.recording { background: #2b2b2b; animation: pulse 1.2s infinite; } .rec-btn.review { background: #6a5440; }
+.rec-btn:disabled { opacity: .45; cursor: default; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(156,31,25,.25), 0 3px 0 #000; } }
+.rec-meter { flex: 1; display: flex; gap: .6rem; align-items: center; min-width: 180px; }
+.rec-level { flex: 1; height: 10px; background: #1a120c; border-radius: 5px; overflow: hidden; }
+.rec-level i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #6faa6f, #e3b04a 75%, #e0574a); transition: width .06s; }
+.rec-level i.hot { background: #e0574a; }
+.mono { font-family: var(--mono); } .engr.ink { color: var(--ink-soft); text-shadow: none; }
+label.inline { display: inline-flex; gap: .5rem; align-items: center; margin: 0; } label.inline .sel { width: auto; }
+@media (max-width: 760px) { .addbar { grid-template-columns: 1fr; } blockquote.prompt { font-size: 1.25rem; } }
 
 </style>
 </head>
@@ -1931,7 +1958,7 @@ function drawWave(c, pcm, rate, v0, v1, { h = 140, boxes = [], cursor = null } =
   g.stroke();
   g.fillStyle = 'rgba(239,230,210,.45)'; g.font = '10px "IBM Plex Mono", monospace';
   const tick = span > 600 ? 60 : span > 120 ? 10 : span > 30 ? 5 : span > 8 ? 1 : 0.25;
-  for (let t = Math.ceil(v0 / tick) * tick; t < v1; t += tick) { const x = X(t); g.fillRect(x, h - 5, 1, 5); g.fillText(fmtTime(t), x + 2, h - 6); }
+  for (let t = Math.ceil(v0 / tick) * tick; t < v1; t += tick) { const x = X(t); g.fillRect(x, h - 5, 1, 5); g.fillText(tick < 1 ? t.toFixed(2) + 's' : fmtTime(t), x + 2, h - 6); }
   if (cursor != null && cursor >= v0 && cursor <= v1) { g.fillStyle = '#f4ead4'; g.fillRect(X(cursor), 0, 1.5, h); }
 }
 function specColor(v) {
@@ -2090,6 +2117,318 @@ async function studioSave(voiceId, tags, mergeGap) {
   toast(`${ok} isolated segment(s) filed into “${v.name}”. Align them in the Voice archive.`);
   logAct('studio_save', { voice: v.name, segments: ok, file: ST.name });
   renderStudioStatus();
+}
+
+const STARTER_SCRIPT = [
+  'The old house stood at the end of a quiet road near the water.',
+  'She opened the letter slowly and read it twice before she said a word.',
+  'We walked through the garden while the light was turning gold.',
+  'It is never too late to begin again, my father used to say.',
+  'There were three small boats tied to the dock that morning.',
+  'He asked me what I thought, and I told him the truth.',
+  'Every book on that shelf has a story about the person who owned it.',
+  'The rain came down hard against the window all through the night.',
+  'Would you like some tea, or would you rather have a glass of water?',
+  'I remember the first time I heard music played in that great hall.',
+  'They had been travelling for many days across the cold northern hills.',
+  'Please put the papers on the table and close the door behind you.',
+  'Nobody knew exactly where the road would lead, but they followed it anyway.',
+  'Her voice was calm and clear, and everyone in the room grew still.',
+  'Before the war, this street was full of shops, children and carts.',
+  'The answer was simple, though it took us years to understand it.',
+  'Somewhere beyond the river, a bell began to ring for evening prayers.',
+  'If you listen carefully, you can hear the sea from the top of the stairs.',
+  'Our neighbours brought bread, cheese and apples to share with everyone.',
+  'The clock in the hallway struck seven, then eight, then nine.',
+  'Why did you leave so suddenly, without saying goodbye to anyone?',
+  'Each winter the family gathered around the fire to tell old stories.',
+  'The captain looked at the map and pointed toward the distant island.',
+  'I would rather walk the long way home than wait for another hour.',
+  'At first the change was small, but soon the whole town noticed it.',
+  'She laughed, shook her head, and said that she had known all along.',
+  'The library smelled of dust, leather, and something like warm sugar.',
+  'Several questions remained, and no one seemed willing to answer them.',
+  'They built a little bridge from stones and fallen branches over the stream.',
+  'Thank you for coming; we could not have done this without your help.',
+  'Through the open window we could see the stars above the mountains.',
+  'His brother worked in the city and only came back during the summer.',
+  'Most people believed the story, but a few were not so sure.',
+  'The next morning was bright, and the whole world seemed new again.',
+  'You must promise to write to me as soon as you arrive.',
+  'Over the years, the garden grew wild and beautiful without any care.',
+  'What matters most is not what we keep, but what we choose to give.',
+  'Our journey ended where it began, beside the quiet water.',
+];
+
+const TXQ = { q: [], running: false, status: '' };
+function autoTxOn() { return localStorage.getItem('ml.autotx') !== '0'; }
+function queueTranscribe(s, force = false) {
+  if (!s || s.kind === 'reference' || (s.words && s.words.length)) return;
+  if (!force && !autoTxOn()) return;
+  if (TXQ.q.some((x) => x.id === s.id)) return;
+  TXQ.q.push(s); runTxQueue();
+}
+function refreshVoiceViews() {
+  if (S.tab === 'archive' && S.vtab === 'drawer') { const v = S.voices.find((x) => x.id === S.voiceSel), body = $('#vtabBody'); if (v && body) body.innerHTML = vtabDrawer(v, S.samples[v.id] || []); refreshCases(); }
+  if (S.tab === 'deck') paintBayB();
+}
+async function runTxQueue() {
+  if (TXQ.running) return;
+  TXQ.running = true;
+  while (TXQ.q.length) {
+    const s = TXQ.q.shift();
+    s._tx = true; refreshVoiceViews();
+    try {
+      const r = await transcribeSample(s, (m) => { TXQ.status = m; });
+      await updateSample(s, { words: r.words, transcript: r.text, aligned_by: 'whisper' });
+      logAct('auto_prepare', { file: s.file_name, words: r.words.length });
+    } catch (e) {
+      console.warn(e);
+      toast(`Couldn’t prepare “${s.file_name}” automatically. Open it and type what is said instead.`, 'warn', 8000);
+      if (/import|load|fetch|network/i.test(e.message || '')) TXQ.q = [];
+    }
+    s._tx = false; refreshVoiceViews();
+  }
+  TXQ.running = false; TXQ.status = ''; refreshVoiceViews();
+}
+function voiceReadiness(smp) {
+  const idx = buildIndex(smp);
+  const usable = smp.filter((s) => s.words && s.words.length).reduce((a, s) => a + s.words.reduce((b, w) => b + Math.max(0, w[2] - w[1]), 0), 0);
+  return { words: idx.map.size, usable };
+}
+
+async function importAudioFiles(files) {
+  const v = S.voices.find((x) => x.id === S.voiceSel);
+  if (!v) { toast('Open a voice first.', 'err'); return; }
+  if (!requireEntitled()) return;
+  files = files.filter((f) => /^(audio|video)\//.test(f.type) || /\.(mp3|wav|m4a|aac|ogg|oga|opus|flac|webm|aif|aiff|mp4|mov|m4v)$/i.test(f.name));
+  if (!files.length) { toast('Those don’t look like audio or video files.', 'err'); return; }
+  let ok = 0; const fails = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    toast(`Filing ${i + 1} of ${files.length}: ${f.name}`, 'info', 1800);
+    if (f.size > 50 * 1048576) { fails.push(`${f.name} is larger than 50 MB — trim it in the Isolation studio first`); continue; }
+    try { const s = await addSampleFromBlob(v, f, f.name, { speaker: v.name, source: 'Upload' }); ok++; queueTranscribe(s); refreshVoiceViews(); }
+    catch (e) { fails.push(e.message); }
+    await yieldUI();
+  }
+  bumpVoice(v.id);
+  logAct('upload', { voice: v.name, files: ok });
+  toast(`${ok} recording(s) added${autoTxOn() && ok ? ' — preparing them now' : ''}.${fails.length ? ' ' + fails[0] : ''}`, fails.length ? 'warn' : 'info', 8000);
+  refreshVoiceViews();
+}
+
+const STREAMING_HOSTS = /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com|spotify\.com|spotify\.link|music\.apple\.com|podcasts\.apple\.com|tidal\.com|deezer\.com|music\.amazon\.[a-z.]+|audible\.[a-z.]+)$/i;
+function normaliseLink(raw) {
+  let s = String(raw || '').trim();
+  const m = s.match(/(?:src|href)\s*=\s*["']([^"']+)["']/i); if (m) s = m[1];
+  s = s.replace(/&amp;/g, '&');
+  let u; try { u = new URL(s); } catch (e) { return null; }
+  if (!/^https?:$/.test(u.protocol)) return null;
+  const host = u.hostname.replace(/^www\./, '');
+  if (/(^|\.)dropbox\.com$/i.test(host)) { u.searchParams.set('dl', '1'); return u; }
+  const g = u.href.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]+)/);
+  if (g) return new URL(`https://drive.google.com/uc?export=download&id=${g[1]}`);
+  return u;
+}
+async function fetchAudioLink(u) {
+  try {
+    const r = await fetch(u.href, { mode: 'cors' });
+    if (r.ok) { const b = await r.blob(); if (/^(audio|video)\//.test(b.type) || (/\.(mp3|wav|m4a|aac|ogg|oga|opus|flac|webm|mp4)$/i.test(u.pathname) && b.size > 1000)) return b; }
+  } catch (e) { /* most hosts block direct browser fetches; fall back to the helper */ }
+  const { data } = await sb.auth.getSession();
+  const token = data && data.session ? data.session.access_token : '';
+  let r;
+  try {
+    r = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/fetch-audio`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, apikey: CONFIG.SUPABASE_ANON_KEY }, body: JSON.stringify({ url: u.href }) });
+  } catch (e) { r = { ok: false, status: 404 }; }
+  if (r.status === 404) throw new Error(S.profile && S.profile.is_dev ? 'Link import needs the fetch-audio helper (see Deployment kit → README).' : 'That link couldn’t be opened. Download the file and use Upload instead.');
+  if (!r.ok) { let m = ''; try { m = (await r.json()).error; } catch (e) { /* ignore */ } throw new Error(m ? `That link couldn’t be imported: ${m}.` : 'That link couldn’t be imported.'); }
+  return r.blob();
+}
+async function importFromLink(v, raw) {
+  const u = normaliseLink(raw);
+  if (!u) { toast('That doesn’t look like a web link.', 'err'); return false; }
+  if (STREAMING_HOSTS.test(u.hostname)) {
+    logAct('link_blocked', { voice: v.name, url: u.href.slice(0, 300) });
+    toast('Links to YouTube, Spotify and other streaming pages can’t be imported. Upload the audio file itself instead.', 'err', 9000);
+    return false;
+  }
+  toast('Fetching the audio…', 'info', 2500);
+  try {
+    const blob = await fetchAudioLink(u);
+    if (blob.size > 50 * 1048576) throw new Error('That file is larger than 50 MB.');
+    const name = decodeURIComponent((u.pathname.split('/').pop() || 'linked-audio')).slice(0, 80) || 'linked-audio';
+    const s = await addSampleFromBlob(v, blob, /\.[a-z0-9]{2,4}$/i.test(name) ? name : name + '.mp3', { speaker: v.name, source: u.hostname, source_url: u.href });
+    bumpVoice(v.id); queueTranscribe(s);
+    logAct('link_import', { voice: v.name, url: u.href.slice(0, 300), seconds: Math.round(s.duration) });
+    toast(`Added “${s.file_name}” (${fmtTime(s.duration)}).`);
+    refreshVoiceViews();
+    return true;
+  } catch (e) { toast(e.message, 'err', 9000); logAct('link_failed', { voice: v.name, url: u.href.slice(0, 300) }); return false; }
+}
+function openLinkBox() {
+  const v = S.voices.find((x) => x.id === S.voiceSel); if (!v) return;
+  if (!requireEntitled()) return;
+  const m = openModal(`<h3>Paste a link</h3>
+    <p class="muted">Paste a link to an audio or video file, a podcast episode file, a Dropbox or Google Drive share link, or an embed code. You can paste several, one per line.</p>
+    <textarea id="linkTx" rows="5" placeholder="https://…"></textarea>
+    <p class="fine">YouTube, Spotify and other streaming pages can’t be imported — upload the audio file itself instead.</p>
+    <div class="row end"><button class="btn ghost" data-act="modal-close">Cancel</button><button class="btn" id="linkGo">Add to ${esc(v.name)}</button></div>`);
+  setTimeout(() => $('#linkTx').focus(), 50);
+  m.querySelector('#linkGo').onclick = async () => {
+    const lines = $('#linkTx').value.split(/\n+/).map((x) => x.trim()).filter(Boolean);
+    if (!lines.length) return;
+    closeModal();
+    for (const l of lines) await importFromLink(v, l);
+  };
+}
+
+const REC = { stream: null, ctx: null, an: null, mr: null, chunks: [], t0: 0, raf: 0, state: 'idle', pcm: null, blob: null, prompts: [], i: 0, mode: 'prompt', src: 'starter', kept: 0, words: 0, voice: null, style: '', url: null, preview: null };
+function bookGapPrompts(v, n = 40) {
+  if (!S.segIndex.segs.length) return [];
+  const have = new Set(buildIndex(S.samples[v.id] || []).map.keys()), freq = new Map(), sents = [];
+  for (const s of S.segIndex.segs) {
+    if (s.kind !== 'text') continue;
+    for (const t of displayTokens(s.text)) { const w = cleanWord(t.raw); if (w && !have.has(w) && !/\d/.test(w)) freq.set(w, (freq.get(w) || 0) + 1); }
+    if (sents.length < 8000) for (const t of splitSentences(s.text)) if (t.length >= 30 && t.length <= 170) sents.push(t);
+  }
+  const cand = sents.map((t) => ({ t, ws: [...new Set(displayTokens(t).map((x) => cleanWord(x.raw)))].filter((w) => freq.has(w)) }));
+  const covered = new Set(), out = [];
+  for (let k = 0; k < n; k++) {
+    let best = null, bs = 0;
+    for (const c of cand) { if (c.used) continue; let sc = 0; for (const w of c.ws) if (!covered.has(w)) sc += Math.log(1 + freq.get(w)); sc /= Math.sqrt(c.t.length / 60); if (sc > bs) { bs = sc; best = c; } }
+    if (!best) break;
+    best.used = true; out.push(best.t); best.ws.forEach((w) => covered.add(w));
+  }
+  return out;
+}
+function recPrompts() {
+  if (REC.src === 'book') { const p = bookGapPrompts(REC.voice); if (p.length) return p; REC.src = 'starter'; }
+  const have = new Set(buildIndex(S.samples[REC.voice.id] || []).map.keys());
+  return [...STARTER_SCRIPT].sort((a, b) => missingCount(b, have) - missingCount(a, have));
+}
+function missingCount(t, have) { return displayTokens(t).filter((x) => !have.has(cleanWord(x.raw))).length; }
+async function openRecorder() {
+  const v = S.voices.find((x) => x.id === S.voiceSel); if (!v) return;
+  if (!requireEntitled()) return;
+  Object.assign(REC, { voice: v, kept: 0, words: 0, mode: 'prompt', src: S.struct ? 'book' : 'starter', i: 0, state: 'idle', pcm: null, blob: null });
+  REC.prompts = recPrompts();
+  const m = openModal('<div id="recBox"><p class="muted">Waiting for the microphone…</p></div>', { wide: true });
+  m.classList.add('rec-modal');
+  m.parentElement.addEventListener('closing', recShutdown);
+  try {
+    REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: false, channelCount: 1 } });
+  } catch (e) {
+    $('#recBox').innerHTML = '<h3>Microphone needed</h3><p>Allow microphone access for this site in your browser, then press Record again.</p>';
+    return;
+  }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  REC.ctx = new AC();
+  const src = REC.ctx.createMediaStreamSource(REC.stream);
+  REC.an = REC.ctx.createAnalyser(); REC.an.fftSize = 1024; src.connect(REC.an);
+  recPaint(); recMeter();
+  logAct('recorder_open', { voice: v.name });
+}
+function recShutdown() {
+  cancelAnimationFrame(REC.raf);
+  try { if (REC.mr && REC.mr.state !== 'inactive') REC.mr.stop(); } catch (e) { /* ignore */ }
+  if (REC.stream) REC.stream.getTracks().forEach((t) => t.stop());
+  if (REC.ctx) REC.ctx.close().catch(() => {});
+  if (REC.url) URL.revokeObjectURL(REC.url);
+  if (REC.preview) REC.preview.pause();
+  Object.assign(REC, { stream: null, ctx: null, an: null, mr: null, state: 'idle', url: null, preview: null });
+  if (REC.kept) { refreshVoiceViews(); toast(`${REC.kept} take(s) added — ${REC.words} words for ${REC.voice.name}.`); }
+}
+function recMeter() {
+  const buf = new Float32Array(1024);
+  const tick = () => {
+    if (!REC.an) return;
+    REC.an.getFloatTimeDomainData(buf);
+    let pk = 0; for (let i = 0; i < buf.length; i++) pk = Math.max(pk, Math.abs(buf[i]));
+    const el = $('#recLevel'); if (el) { el.style.width = Math.min(100, Math.round(Math.sqrt(pk) * 110)) + '%'; el.classList.toggle('hot', pk > 0.95); }
+    const t = $('#recTime'); if (t && REC.state === 'recording') t.textContent = fmtTime((performance.now() - REC.t0) / 1000);
+    REC.raf = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function recPaint() {
+  const box = $('#recBox'); if (!box) return;
+  const v = REC.voice, prompt = REC.prompts[REC.i];
+  const styles = ['', 'calm', 'warm', 'neutral', 'excited', 'sad', 'whisper', 'formal'];
+  box.innerHTML = `<div class="row between"><h3 class="display">Recording into ${esc(v.name)}</h3><span class="muted">${REC.kept} take(s) kept · +${REC.words} words</span></div>
+    <div class="auth-switch rec-switch"><button class="${REC.mode === 'prompt' ? 'on' : ''}" data-rmode="prompt">Read prompts</button><button class="${REC.mode === 'free' ? 'on' : ''}" data-rmode="free">Free recording</button></div>
+    ${REC.mode === 'prompt' ? `
+      <div class="row between"><label class="inline"><span class="engr ink">Prompts</span><select class="sel" id="recSrc"><option value="starter" ${REC.src === 'starter' ? 'selected' : ''}>Starter script</option><option value="book" ${REC.src === 'book' ? 'selected' : ''} ${S.struct ? '' : 'disabled'}>Missing words in the loaded book</option></select></label>
+      <span class="muted">${REC.prompts.length ? `${REC.i + 1} of ${REC.prompts.length}` : ''}</span></div>
+      <blockquote class="prompt">${prompt ? esc(prompt) : 'All prompts recorded. Switch the prompt set or use Free recording.'}</blockquote>`
+    : `<label><span>What will you say? <small class="muted">(optional — leave blank and it will be prepared automatically)</small></span><textarea id="recFree" rows="3">${esc(REC.freeText || '')}</textarea></label>`}
+    <div class="rec-deck">
+      <button class="rec-btn ${REC.state}" id="recBtn" ${(REC.mode === 'prompt' && !prompt) || REC.state === 'saving' ? 'disabled' : ''}>${REC.state === 'recording' ? '■ Stop' : REC.state === 'review' ? '● Redo' : '● Record'}</button>
+      <div class="rec-meter"><div class="rec-level"><i id="recLevel"></i></div><span class="mono" id="recTime">${REC.state === 'review' && REC.pcm ? fmtTime(REC.pcm.length / RATE) : '00:00'}</span></div>
+      <label class="inline"><span class="engr ink">Style</span><select class="sel" id="recStyle">${styles.map((s) => `<option value="${s}" ${REC.style === s ? 'selected' : ''}>${s || '—'}</option>`).join('')}</select></label>
+    </div>
+    ${REC.state === 'review' ? `<canvas id="recWave" class="wave"></canvas>
+      <div class="row end"><button class="btn ghost" id="recPlay">▶ Listen</button>${REC.mode === 'prompt' ? '<button class="btn ghost" id="recSkip">Skip prompt</button>' : ''}<button class="btn" id="recKeep">Keep take</button></div>`
+      : REC.state === 'saving' ? '<p class="busy"><i class="led on"></i> Filing the take…</p>'
+        : `<div class="row end">${REC.mode === 'prompt' && prompt ? '<button class="btn ghost" id="recSkip">Skip prompt</button>' : ''}<button class="btn ghost" data-act="modal-close">Done</button></div>`}
+    <p class="fine">Read naturally, at your normal pace, in a quiet room. Each kept take is saved as an audio file in this voice’s drawer and is ready for narration straight away.</p>`;
+  box.querySelectorAll('[data-rmode]').forEach((b) => b.onclick = () => { if (REC.state === 'recording') return; REC.mode = b.dataset.rmode; REC.state = 'idle'; recPaint(); });
+  const srcSel = $('#recSrc'); if (srcSel) srcSel.onchange = () => { REC.src = srcSel.value; REC.prompts = recPrompts(); REC.i = 0; REC.state = 'idle'; recPaint(); };
+  const st = $('#recStyle'); if (st) st.onchange = () => { REC.style = st.value; };
+  const ft = $('#recFree'); if (ft) ft.oninput = () => { REC.freeText = ft.value; };
+  $('#recBtn').onclick = () => (REC.state === 'recording' ? recStop() : recStart());
+  const sk = $('#recSkip'); if (sk) sk.onclick = () => { REC.i++; REC.state = 'idle'; recPaint(); };
+  const pl = $('#recPlay'); if (pl) pl.onclick = () => { if (REC.preview) REC.preview.pause(); REC.preview = new Audio(REC.url); REC.preview.play(); };
+  const kp = $('#recKeep'); if (kp) kp.onclick = recKeep;
+  if (REC.state === 'review' && REC.pcm) drawWave($('#recWave'), REC.pcm, RATE, 0, REC.pcm.length / RATE, { h: 90 });
+}
+function recStart() {
+  if (!REC.stream) return;
+  if (REC.preview) REC.preview.pause();
+  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  const mime = window.MediaRecorder && types.find((t) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t));
+  try { REC.mr = mime ? new MediaRecorder(REC.stream, { mimeType: mime }) : new MediaRecorder(REC.stream); }
+  catch (e) { toast('This browser can’t record audio. Try Chrome, Edge, Firefox or Safari.', 'err'); return; }
+  REC.chunks = [];
+  REC.mr.ondataavailable = (e) => { if (e.data && e.data.size) REC.chunks.push(e.data); };
+  REC.mr.onstop = recProcess;
+  if (REC.ctx.state === 'suspended') REC.ctx.resume();
+  REC.mr.start(250); REC.t0 = performance.now(); REC.state = 'recording';
+  recPaint();
+}
+function recStop() { if (REC.mr && REC.mr.state !== 'inactive') REC.mr.stop(); }
+async function recProcess() {
+  const raw = new Blob(REC.chunks, { type: (REC.mr && REC.mr.mimeType) || 'audio/webm' });
+  try {
+    let pcm = await decodeToMono(await raw.arrayBuffer());
+    pcm = trimEdges(pcm, RATE, 0.03, 0.2);
+    let peak = 0; for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
+    if (pcm.length < RATE * 0.4 || peak < 0.02) { toast('That take was nearly silent — check the microphone and try again.', 'warn'); REC.state = 'idle'; recPaint(); return; }
+    if (peak < 0.5) { const g = Math.min(4, 0.7 / peak); for (let i = 0; i < pcm.length; i++) pcm[i] *= g; }
+    REC.pcm = pcm; REC.blob = encodeWAV(pcm, RATE);
+    if (REC.url) URL.revokeObjectURL(REC.url);
+    REC.url = URL.createObjectURL(REC.blob);
+    REC.state = 'review';
+  } catch (e) { console.warn(e); toast('That recording couldn’t be read. Please try again.', 'err'); REC.state = 'idle'; }
+  recPaint();
+}
+async function recKeep() {
+  const v = REC.voice, text = REC.mode === 'prompt' ? REC.prompts[REC.i] : (REC.freeText || '').trim();
+  REC.state = 'saving'; recPaint();
+  try {
+    const words = text ? alignManual(REC.pcm, RATE, text) : [];
+    const d = new Date(), stamp = d.toISOString().slice(0, 19).replace(/[-:T]/g, '').replace(/^(\d{8})/, '$1-');
+    const s = await addSampleFromBlob(v, REC.blob, `take-${stamp}.wav`, { speaker: v.name, emotion: REC.style || null, source: 'Recorded in the library', date: d.toISOString().slice(0, 10) },
+      { transcript: text || null, words, aligned_by: text ? 'prompt' : null });
+    bumpVoice(v.id);
+    if (!text) queueTranscribe(s, true);
+    REC.kept++; REC.words += words.length;
+    logAct('record_take', { voice: v.name, seconds: +(REC.pcm.length / RATE).toFixed(1), mode: REC.mode, text: (text || '').slice(0, 160) });
+    if (REC.mode === 'prompt') REC.i++; else REC.freeText = '';
+    REC.state = 'idle'; REC.pcm = null;
+  } catch (e) { toast(e.message, 'err'); REC.state = 'review'; }
+  recPaint();
 }
 
 const WOODS = { walnut: ['#5b3a24', '#3a2416', '#7b5236'], rosewood: ['#5a1f1a', '#351110', '#7a2e24'], oak: ['#9a6b3e', '#6e4a28', '#b88552'], teak: ['#8a5a2b', '#5f3c1b', '#a87039'], ebony: ['#2a201b', '#14100d', '#3b2f28'] };
@@ -2305,9 +2644,9 @@ function paintBayB() {
   const v = curVoice(), smp = v ? S.samples[v.id] : null;
   const aligned = smp ? smp.filter((s) => s.words && s.words.length).length : 0, dur = smp ? smp.reduce((a, s) => a + (s.duration || 0), 0) : 0;
   box.innerHTML = `<div class="bay-head"><span class="engr">Side B</span><span class="engr dim">Archive</span></div>
-    <div class="window">${v ? cassetteSVG({ title: v.name, sub: v.description || 'voice archive', style: v.style, side: 'B' }) : '<div class="slot-empty"><b>No voice loaded</b><span>Choose an archive below</span></div>'}</div>
-    <div class="lcd small">${v ? `<div class="kv"><span>RECORDINGS</span><b>${smp ? smp.filter((s) => s.kind !== 'reference').length : '…'}</b></div><div class="kv"><span>ALIGNED</span><b>${smp ? aligned : '…'}</b></div><div class="kv"><span>DURATION</span><b>${smp ? fmtTime(dur) : '…'}</b></div><div class="kv"><span>ENGINE</span><b>ARCHIVAL</b></div>` : '<div>SELECT A VOICE</div><div class="dim">Archival reconstruction only</div>'}</div>
-    <div class="keys col"><select class="sel" data-change="voice-select" ${S.book ? '' : 'disabled'}><option value="">— choose voice archive —</option>${S.voices.map((x) => `<option value="${x.id}" ${v && v.id === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select><button class="key" data-act="tab" data-tab="archive">Open archive</button></div>`;
+    <div class="window">${v ? cassetteSVG({ title: v.name, sub: v.description || 'voice archive', style: v.style, side: 'B' }) : (S.voices.length ? '<div class="slot-empty"><b>No voice loaded</b><span>Choose a voice below</span></div>' : '<div class="slot-empty"><b>No voices yet</b><span>Create one and record a few prompts</span></div>')}</div>
+    <div class="lcd small">${v ? `<div class="kv"><span>RECORDINGS</span><b>${smp ? smp.filter((s) => s.kind !== 'reference').length : '…'}</b></div><div class="kv"><span>WORDS READY</span><b>${smp ? buildIndex(smp).map.size : '…'}</b></div><div class="kv"><span>DURATION</span><b>${smp ? fmtTime(dur) : '…'}</b></div><div class="kv"><span>ENGINE</span><b>ARCHIVAL</b></div>` : '<div>SELECT A VOICE</div><div class="dim">Archival reconstruction only</div>'}</div>
+    <div class="keys col"><select class="sel" data-change="voice-select" ${S.book ? '' : 'disabled'}><option value="">— choose voice archive —</option>${S.voices.map((x) => `<option value="${x.id}" ${v && v.id === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>${S.voices.length ? '<button class="key" data-act="tab" data-tab="archive">Open archive</button>' : '<button class="key" data-act="voice-new-go">Create a voice</button>'}</div>`;
   if (v && !smp) fetchSamples(v.id).then(paintBayB, () => {});
 }
 function paintBayM() {
@@ -2524,23 +2863,28 @@ async function renderVoiceDetail() {
   </div>`;
 }
 function vtabDrawer(v, smp) {
-  const f = (S.drawerFilter || '').toLowerCase();
-  const list = smp.filter((s) => s.kind !== 'reference' && (!f || [s.file_name, s.speaker, s.emotion, s.quality, s.source].join(' ').toLowerCase().includes(f)));
-  const un = smp.filter((s) => s.kind !== 'reference' && !(s.words && s.words.length)).length;
-  return `<div class="drawer-tools">
-      <div class="drop drawer-drop" data-drop="audio"><b>Drop recordings here</b><span>MP3 · WAV · M4A · OGG · FLAC — or</span><button class="btn sm" data-act="rec-import">Choose files</button></div>
-      <div class="col">
-        <input class="sel" placeholder="Filter by name, speaker, emotion, quality, source…" value="${esc(S.drawerFilter || '')}" data-input="drawer-filter">
-        <div class="row wrap"><button class="btn ghost sm" data-act="tx-all" ${un ? '' : 'disabled'}>Transcribe ${un} unaligned (on-device, free)</button><button class="btn ghost sm" data-act="ref-add">Add a source link</button></div>
-        <p class="fine">Transcription runs entirely in your browser with a small open model (≈40 MB download, once). Prefer no models at all? Open a tape, type what is said, and press “Align by hand”.</p>
-      </div>
+  const f = (S.drawerFilter || '').toLowerCase(), rec = smp.filter((x) => x.kind !== 'reference');
+  const list = rec.filter((x) => !f || [x.file_name, x.speaker, x.emotion, x.quality, x.source, x.transcript].join(' ').toLowerCase().includes(f));
+  const rd = voiceReadiness(smp), goal = 400, pct = Math.min(100, Math.round((rd.words / goal) * 100));
+  const pending = rec.filter((x) => !(x.words && x.words.length)).length;
+  const status = (x) => x._tx ? '<span class="tag busy-tag">preparing…</span>' : x.words && x.words.length ? `<span class="tag ok-tag">${x.words.length} words</span>` : '<span class="tag need-tag">needs words</span>';
+  return `<div class="addbar">
+      <button class="add-opt rec" data-act="rec-open"><i>●</i><b>Record</b><span>Read short prompts aloud — usable straight away</span></button>
+      <button class="add-opt" data-act="rec-import"><i>⤒</i><b>Upload</b><span>Audio or video files from your device</span></button>
+      <button class="add-opt" data-act="link-open"><i>⛓</i><b>Paste a link</b><span>Audio file links, podcast files, Dropbox, Drive</span></button>
     </div>
-    <div class="drawer">${list.map((s) => `<button class="mini" data-act="sample-open" data-id="${s.id}" style="--mini-stripe:${({ calm: '#6f9fc0', warm: '#d9a441', excited: '#c4513e', sad: '#7a6fb0', neutral: '#9a8f78' })[(s.emotion || '').toLowerCase()] || 'var(--accent)'}">
-        <span class="mini-label">${esc((s.file_name || 'tape').slice(0, 28))}</span>
-        <span class="mini-meta">${fmtTime(s.duration)} · ${esc(s.emotion || s.speaker || s.quality || '')}</span>
+    <div class="ready">
+      <div class="row between"><span><b>${rd.words}</b> words this voice can say · ${fmtDur(rd.usable)} of usable speech</span><span class="muted">${rd.words >= goal ? 'Ready to narrate' : `About ${goal} different words makes a good first book`}</span></div>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+      <div class="row between"><label class="check"><input type="checkbox" data-change="autotx" ${autoTxOn() ? 'checked' : ''}> Prepare uploads automatically (free, runs on this device)</label>
+      ${pending ? `<span class="muted">${pending} tape(s) need words${TXQ.running ? ` — ${esc(TXQ.status || 'preparing…')}` : ` <button class="mini-btn" data-act="tx-all">prepare now</button>`}</span>` : ''}</div>
+    </div>
+    ${rec.length > 12 ? `<input class="sel drawer-filter" placeholder="Filter tapes…" value="${esc(S.drawerFilter || '')}" data-input="drawer-filter">` : ''}
+    <div class="drawer drop" data-drop="audio">${list.map((x) => `<button class="mini" data-act="sample-open" data-id="${x.id}" style="--mini-stripe:${({ calm: '#6f9fc0', warm: '#d9a441', excited: '#c4513e', sad: '#7a6fb0', neutral: '#9a8f78', whisper: '#8aa39a', formal: '#5a5a7a' })[(x.emotion || '').toLowerCase()] || 'var(--accent)'}">
+        <span class="mini-label">${esc((x.transcript || x.file_name || 'tape').slice(0, 40))}</span>
+        <span class="mini-meta">${fmtTime(x.duration)} · ${status(x)}</span>
         <span class="mini-holes"><i></i><i></i></span>
-        <i class="led ${s.words && s.words.length ? 'on green' : ''}" title="${s.words && s.words.length ? 'aligned' : 'not aligned'}"></i>
-      </button>`).join('') || '<p class="muted">The drawer is empty.</p>'}</div>`;
+      </button>`).join('') || '<p class="drawer-empty">This drawer is empty. Record, upload or paste a link above — or drop audio files here.</p>'}</div>`;
 }
 function vtabCoverage(v, smp) {
   const idx = buildIndex(smp), rec = smp.filter((s) => s.kind !== 'reference');
@@ -2585,7 +2929,7 @@ async function openSampleEditor(s) {
   const m = openModal(`<h3>${esc(s.file_name)}</h3>
     <p class="muted">${fmtTime(s.duration)} · signal ${s.quality_db ?? '?'} dB · ${s.words && s.words.length ? `${s.words.length} words aligned (${esc(s.aligned_by || '')})` : 'not aligned yet'}</p>
     <canvas id="smWave" class="wave"></canvas>
-    <div class="row"><button class="btn sm" id="smPlay">▶ Play</button><button class="btn ghost sm" id="smStop">■ Stop</button><span class="fine">Click a word box on the waveform to hear it.</span></div>
+    <div class="row"><button class="btn sm" id="smPlay">▶ Play</button><button class="btn ghost sm" id="smStop">■ Stop</button><button class="btn ghost sm" id="smDl">⤓ Download file</button><span class="fine">Click a word box on the waveform to hear it.</span></div>
     <label><span class="engr">What is said</span><textarea id="smTx" rows="3">${esc(s.transcript || '')}</textarea></label>
     <div class="row wrap"><button class="btn sm" id="smAlign">Align by hand (no models)</button><button class="btn ghost sm" id="smWhisper">Transcribe on this device</button><span class="muted" id="smMsg"></span></div>
     <div class="words-tbl" id="smWords"></div>
@@ -2620,6 +2964,7 @@ async function openSampleEditor(s) {
   $('#smWave').onclick = (e) => { const r = e.target.getBoundingClientRect(), t = ((e.clientX - r.left) / r.width) * (pcm.length / RATE); const w = words.find((x) => t >= x[1] && t <= x[2]); if (w) play(w[1], w[2]); else play(t, t + 1.5); };
   $('#smPlay').onclick = () => play(0, pcm.length / RATE);
   $('#smStop').onclick = stop;
+  $('#smDl').onclick = async () => { try { downloadBlob(await getSampleBlob(s.path), s.file_name || 'take.wav'); logAct('sample_download', { file: s.file_name }); } catch (e) { toast(e.message, 'err'); } };
   $('#smAlign').onclick = () => { const tx = $('#smTx').value.trim(); if (!tx) { msg('Type what is said first.'); return; } words = alignManual(pcm, RATE, tx); s._aligned = 'manual'; table(); draw(); msg(`${words.length} words placed — check a few and nudge if needed, then Save.`); };
   $('#smWhisper').onclick = async () => {
     try { const r = await transcribeSample(s, msg); words = r.words; $('#smTx').value = r.text; s._aligned = 'whisper'; table(); draw(); msg(`${words.length} words transcribed. Review, then Save.`); }
@@ -2633,22 +2978,6 @@ async function openSampleEditor(s) {
     } catch (e) { toast(e.message, 'err'); }
   };
   $('#smDel').onclick = async () => { if (!(await confirmBox(`Delete “${s.file_name}” from the archive?`, 'Delete', true))) return; try { await deleteSample(s); toast('Tape removed.'); renderVoiceDetail(); refreshCases(); } catch (e) { toast(e.message, 'err'); } };
-}
-async function importAudioFiles(files) {
-  const v = S.voices.find((x) => x.id === S.voiceSel);
-  if (!v) { toast('Open a voice archive first.', 'err'); return; }
-  if (!requireEntitled()) return;
-  files = files.filter((f) => /^audio\//.test(f.type) || /\.(mp3|wav|m4a|aac|ogg|oga|opus|flac|webm|aif|aiff)$/i.test(f.name));
-  if (!files.length) { toast('Those don’t look like audio files.', 'err'); return; }
-  const tags = await formBox(`File ${files.length} recording(s) into “${v.name}”`, [
-    { name: 'speaker', label: 'Speaker', value: v.name }, { name: 'emotion', label: 'Emotion / style', placeholder: 'calm, warm, excited…' },
-    { name: 'quality', label: 'Quality (blank = measure automatically)', type: 'select', options: [['', 'measure automatically'], ['studio', 'studio'], ['good', 'good'], ['fair', 'fair'], ['poor', 'poor']] },
-    { name: 'date', label: 'Recorded on', type: 'date' }, { name: 'source', label: 'Source', placeholder: 'interview, voicemail, lecture…' }, { name: 'source_url', label: 'Source link', type: 'url' },
-  ], 'File into drawer');
-  if (!tags) return;
-  const res = await importRecordings(v, files, tags, (i, n, name) => toast(`Filing ${i + 1}/${n}: ${name}`, 'info', 1800));
-  toast(`${res.ok} recording(s) filed.${res.fails.length ? ' ' + res.fails.length + ' failed: ' + res.fails[0] : ''}`, res.fails.length ? 'warn' : 'info', 8000);
-  renderVoiceDetail(); refreshCases(); paintBayB();
 }
 
 function renderStudio() {
@@ -2752,7 +3081,7 @@ async function devLoad() {
       sb.from('profiles').select('*').order('created_at', { ascending: false }),
       sb.from('books').select('id,owner,title,author,pages,chapter_count,render_stats,created_at,updated_at,voice_id'),
       sb.from('voices').select('id,owner,name,created_at'),
-      sb.from('samples').select('owner,voice_id,duration,kind').limit(50000),
+      sb.from('samples').select('id,owner,voice_id,duration,kind,path,file_name,created_at,source,source_url,aligned_by,transcript').order('created_at', { ascending: false }).limit(50000),
       sb.from('activity').select('*').order('created_at', { ascending: false }).limit(1000),
     ]);
     for (const r of [p, b, v, s, a]) if (r.error) throw r.error;
@@ -2784,7 +3113,10 @@ function paintDev() {
       <td>${u.is_dev ? '' : `<button class="mini-btn" data-act="dev-paid" data-id="${u.id}" data-v="${u.is_paid ? 0 : 1}">${u.is_paid ? 'revoke' : 'grant access'}</button>`}</td></tr>`).join('')}</tbody></table></div>
     ${sel ? `<div class="paper card dev-user"><div class="row between"><h3>${esc(sel.username)}</h3><button class="btn ghost sm" data-act="dev-sel" data-id="">Show everyone</button></div>
       <div class="grid2"><div><h4>Books</h4><ul class="plain">${(bOwn.get(sel.id) || []).map((b) => `<li><b>${esc(b.title)}</b> <small>${esc(b.author || '')} · ${b.pages} pp · ${b.chapter_count} ch · ${b.render_stats && b.render_stats.total ? Math.round((b.render_stats.rendered / b.render_stats.total) * 100) : 0}% narrated · updated ${fmtDate(b.updated_at)}</small></li>`).join('') || '<li class="muted">none</li>'}</ul></div>
-      <div><h4>Voice archives</h4><ul class="plain">${(vOwn.get(sel.id) || []).map((v) => { const sm = D.samples.filter((x) => x.voice_id === v.id && x.kind !== 'reference'); return `<li><b>${esc(v.name)}</b> <small>${sm.length} recordings · ${fmtDur(sm.reduce((a, x) => a + (x.duration || 0), 0))}</small></li>`; }).join('') || '<li class="muted">none</li>'}</ul></div></div></div>` : ''}
+      <div><h4>Voice archives</h4><ul class="plain">${(vOwn.get(sel.id) || []).map((v) => { const sm = D.samples.filter((x) => x.voice_id === v.id && x.kind !== 'reference'); return `<li><b>${esc(v.name)}</b> <small>${sm.length} recordings · ${fmtDur(sm.reduce((a, x) => a + (x.duration || 0), 0))}</small></li>`; }).join('') || '<li class="muted">none</li>'}</ul></div></div>
+      <h4>Recordings, links and uploads</h4>
+      <div class="scroll-x"><table class="tbl"><thead><tr><th>Added</th><th>Voice</th><th>File</th><th>Length</th><th>Source</th><th>Words said</th><th></th></tr></thead><tbody>
+      ${D.samples.filter((x) => x.owner === sel.id).slice(0, 300).map((x) => { const v = D.voices.find((y) => y.id === x.voice_id); return `<tr><td class="nowrap">${fmtDate(x.created_at)}</td><td>${esc(v ? v.name : '—')}</td><td>${esc(x.file_name || '')}</td><td>${x.kind === 'reference' ? 'link only' : fmtTime(x.duration)}</td><td>${x.source_url ? `<a href="${esc(x.source_url)}" target="_blank" rel="noopener">${esc(x.source || 'link')}</a>` : esc(x.source || '—')}</td><td><small>${esc((x.transcript || '').slice(0, 120))}</small></td><td class="nowrap">${x.path ? `<button class="mini-btn" data-act="dev-play" data-path="${esc(x.path)}">▶</button><button class="mini-btn" data-act="dev-dl" data-path="${esc(x.path)}" data-name="${esc(x.file_name || 'recording')}">⤓</button>` : ''}</td></tr>`; }).join('') || '<tr><td colspan="7" class="muted">none</td></tr>'}</tbody></table></div></div>` : ''}
     <h3>Activity${sel ? ' — ' + esc(sel.username) : ' — all users'}</h3>
     <div class="scroll-x"><table class="tbl feed"><thead><tr><th>When</th><th>User</th><th>Action</th><th>Detail</th></tr></thead><tbody>
     ${feed.slice(0, 600).map((x) => `<tr><td class="nowrap">${fmtDate(x.created_at)}</td><td><button class="link" data-act="dev-sel" data-id="${x.user_id}">${esc(x.username || x.user_id.slice(0, 8))}</button></td><td><span class="act-tag">${esc(x.action)}</span></td><td><small>${esc(Object.entries(x.detail || {}).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ').slice(0, 240))}</small></td></tr>`).join('') || '<tr><td class="muted" colspan="4">No activity yet.</td></tr>'}</tbody></table></div>
@@ -2970,12 +3302,12 @@ const ACTIONS = {
   'voice-new': async () => {
     if (!requireEntitled()) return;
     const f = await formBox('New voice archive', [
-      { name: 'name', label: 'Voice name', required: true }, { name: 'description', label: 'Description', type: 'textarea', rows: 2 },
+      { name: 'name', label: 'Voice name', required: true }, { name: 'description', label: 'Description (optional)', type: 'textarea', rows: 2 },
       { name: 'ok', label: 'I have the right to archive and reproduce this voice.', type: 'checkbox' },
     ], 'Create');
     if (!f) return;
     if (!f.ok) { toast('Tick the confirmation to create a voice archive.', 'err'); return; }
-    try { const v = await createVoice(f); S.voiceSel = v.id; renderArchive(); if (S.book && !S.book.voice_id) setBookVoice(v.id); } catch (e) { toast(e.message, 'err'); }
+    try { const v = await createVoice(f); S.voiceSel = v.id; S.vtab = 'drawer'; renderArchive(); if (S.book && !S.book.voice_id) setBookVoice(v.id); toast(`“${v.name}” is ready. Press Record to read a few prompts — the voice can narrate as soon as it has words.`, 'info', 8000); } catch (e) { toast(e.message, 'err'); }
   },
   'voice-open': (el) => { S.voiceSel = el.dataset.id; refreshCases(); renderVoiceDetail(); },
   vtab: (el) => { S.vtab = el.dataset.vtab; renderVoiceDetail(); },
@@ -3003,21 +3335,26 @@ const ACTIONS = {
     if (!(await confirmBox(`Delete “${v.name}” and every recording in it? This cannot be undone.`, 'Delete archive', true))) return;
     try { await deleteVoice(v); if (S.book && S.book.voice_id === v.id) S.book.voice_id = null; renderArchive(); } catch (e) { toast(e.message, 'err'); }
   },
+  'rec-open': () => openRecorder(),
+  'link-open': () => openLinkBox(),
+  'voice-new-go': () => { S.tab = 'archive'; renderView(); ACTIONS['voice-new'](); },
+  'dev-play': async (el) => {
+    try {
+      if (S.devAudio && S.devAudio._path === el.dataset.path && !S.devAudio.paused) { S.devAudio.pause(); return; }
+      if (S.devAudio) S.devAudio.pause();
+      S.devAudio = new Audio(await signedUrl(el.dataset.path, 600)); S.devAudio._path = el.dataset.path; S.devAudio.play();
+    } catch (e) { toast(e.message, 'err'); }
+  },
+  'dev-dl': async (el) => { try { downloadBlob(await sbDownload(el.dataset.path), el.dataset.name || 'recording'); } catch (e) { toast(e.message, 'err'); } },
   'rec-import': async () => { const files = await pickFiles('audio/*,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.webm,.aiff', true); if (files.length) importAudioFiles(files); },
   'ref-add': async () => {
     const v = S.voices.find((x) => x.id === S.voiceSel);
     const f = await formBox('Add a source link', [{ name: 'url', label: 'Link (YouTube, Spotify, archive page…)', type: 'url', required: true }, { name: 'title', label: 'Title' }, { name: 'source', label: 'Platform / publisher' }, { name: 'note', label: 'Notes', type: 'textarea', rows: 2 }], 'Add', 'Stored as a reference only. The app never downloads from streaming platforms; import the audio file itself when you have it.');
     if (f) { try { await addReference(v, f); renderVoiceDetail(); } catch (e) { toast(e.message, 'err'); } }
   },
-  'tx-all': async () => {
-    const v = S.voices.find((x) => x.id === S.voiceSel), list = (S.samples[v.id] || []).filter((s) => s.kind !== 'reference' && !(s.words && s.words.length));
-    if (!(await confirmBox(`Transcribe ${list.length} recording(s) on this device? The free open-source transcriber (≈40 MB) downloads once; long tapes take a while. Keep this tab open.`, 'Start'))) return;
-    let ok = 0;
-    for (let i = 0; i < list.length; i++) {
-      try { const r = await transcribeSample(list[i], (m) => toast(`${i + 1}/${list.length}: ${m}`, 'info', 2000)); await updateSample(list[i], { words: r.words, transcript: r.text, aligned_by: 'whisper' }); ok++; }
-      catch (e) { toast(`${list[i].file_name}: ${e.message}`, 'err'); if (i === 0) break; }
-    }
-    toast(`${ok} recording(s) transcribed and aligned.`); logAct('transcribe', { voice: v.name, count: ok }); renderVoiceDetail(); refreshCases();
+  'tx-all': () => {
+    const v = S.voices.find((x) => x.id === S.voiceSel), list = (S.samples[v.id] || []).filter((x) => x.kind !== 'reference' && !(x.words && x.words.length));
+    list.forEach((x) => queueTranscribe(x, true)); toast(`Preparing ${list.length} tape(s) on this device. The first time, a free speech model (about 40 MB) downloads once.`, 'info', 7000);
   },
   'sample-open': (el) => { const s = (S.samples[S.voiceSel] || []).find((x) => x.id === el.dataset.id); if (s) openSampleEditor(s); },
   'sample-del': async (el) => { const s = (S.samples[S.voiceSel] || []).find((x) => x.id === el.dataset.id); if (s) { await deleteSample(s); renderVoiceDetail(); } },
@@ -3100,6 +3437,7 @@ async function liveIndexHtml() {
   return '<!doctype html>' + document.documentElement.outerHTML;
 }
 const CHANGES = {
+  autotx: (el) => { localStorage.setItem('ml.autotx', el.checked ? '1' : '0'); if (el.checked) { const v = S.voices.find((x) => x.id === S.voiceSel); (S.samples[v && v.id] || []).forEach((x) => queueTranscribe(x)); } },
   'voice-select': (el) => setBookVoice(el.value),
   speed: (el) => Player.setRate(+el.value), sleep: (el) => Player.setSleep(el.value),
   'fx-hiss': (el) => Player.setFx('hiss', el.checked), 'fx-sat': (el) => Player.setFx('sat', el.checked),
