@@ -376,6 +376,7 @@ blockquote.prompt.wordwise span { background: #f1e7cf; border-radius: 4px; paddi
 .std-art { grid-row: 1 / 3; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 1.6rem; font-style: italic; color: #f4ead4; background: radial-gradient(circle at 35% 30%, var(--case-stripe), #120d09 75%); box-shadow: inset 0 0 0 3px rgba(255,255,255,.12); }
 .std-case b { display: block; font-size: 1.1rem; font-weight: 500; } .std-case small { color: var(--muted); }
 .std-case .row { grid-column: 2; margin: 0; } .std-case .mini-btn { color: var(--text); }
+.reader.live .seg:not(.rec) { color: inherit; }
 
 </style>
 </head>
@@ -1277,17 +1278,9 @@ async function importVoiceFile(file, onProg) {
   return v;
 }
 
-let _asr = null;
 async function ensureWhisper(onStatus) {
-  if (_asr) return _asr;
-  onStatus && onStatus('Loading the on-device transcriber (≈40 MB, first time only)…');
-  const T = await import(CDN.transformers);
-  T.env.allowLocalModels = false;
-  _asr = await T.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
-    revision: 'output_attentions',
-    progress_callback: (p) => { if (p.status === 'progress' && onStatus) onStatus(`Downloading transcriber… ${Math.round(p.progress || 0)}%`); },
-  });
-  return _asr;
+  await ML.call('load-asr', {}, onStatus);
+  return (audio, opts) => ML.call('asr', { audio, opts }, onStatus, [audio.buffer]);
 }
 async function transcribeSample(sample, onStatus) {
   const asr = await ensureWhisper(onStatus);
@@ -1521,7 +1514,7 @@ class ArchivalEngine {
 }
 
 const R = { running: false, stopReq: false, done: 0, total: 0, failed: [], current: null, msDone: 0, charsDone: 0, charsLeft: 0, label: '' };
-function voiceTag(b = S.book) { return b ? (b.std_voice ? 'std-' + b.std_voice : b.voice_id) : null; }
+function voiceTag(b = S.book) { return b ? (/^device:/.test(b.std_voice || '') ? 'device' : b.std_voice ? 'std-' + b.std_voice : b.voice_id) : null; }
 function segKey(seg, voiceId = voiceTag()) { return `${S.user.id}|arch2|${voiceId || 'none'}|${cyrb53(seg.kind + '|' + (seg.paraEnd ? 1 : 0) + '|' + seg.text)}`; }
 async function loadRenderMeta() {
   const segs = S.segIndex.segs;
@@ -1573,6 +1566,7 @@ async function runRender(list, label = 'book') {
   if (R.running) { toast('The narrator is already recording — pause it first.'); return; }
   if (!S.book) return;
   if (!requireEntitled()) return;
+  if (isDeviceBook()) { toast('Device voices read live — just press ▶. To save the book as audio files, pick a standard voice on Side B.', 'info', 8000); return; }
   const book = S.book;
   let engine;
   try {
@@ -1734,7 +1728,7 @@ const Player = {
     return cum;
   },
   durOf(gi) { const m = S.renderMeta.get(S.keys[gi]); return m ? m.dur : 0; },
-  time() { return this.loaded === this.gi && this.el.src ? this.el.currentTime || 0 : this.offset; },
+  time() { if (isDeviceBook()) return Live.elapsed(); return this.loaded === this.gi && this.el.src ? this.el.currentTime || 0 : this.offset; },
   async load(gi) {
     const key = S.keys[gi];
     if (!S.renderMeta.has(key)) return false;
@@ -1750,6 +1744,7 @@ const Player = {
   async playAt(gi, offset = 0, auto = true) {
     const segs = this.segs();
     if (!segs.length) return;
+    if (isDeviceBook()) { gi = clamp(gi, 0, segs.length - 1); if (auto) Live.speak(gi, 0); else { Live.stop(); this.gi = gi; } return; }
     gi = clamp(gi, 0, segs.length - 1);
     this.gi = gi; this.offset = offset; this.waiting = false;
     const ok = await this.load(gi);
@@ -1771,6 +1766,7 @@ const Player = {
   async play() {
     if (!S.book) { toast('Insert a manuscript first.'); return; }
     if (this.playing) return;
+    if (isDeviceBook()) { Live.speak(this.gi, Live.resumeChar || 0); Live.resumeChar = 0; logAct('listen', { book: S.book.title, voice: 'device' }); return; }
     this.ensureGraphIfNeeded();
     if (this.loaded === this.gi && this.el.src) {
       this.el.playbackRate = this.rate;
@@ -1780,8 +1776,9 @@ const Player = {
     await this.playAt(this.gi, this.offset);
     logAct('listen', { book: S.book.title, chapter: (this.segs()[this.gi] || {}).ci });
   },
-  pause() { this.offset = this.time(); this.el.pause(); this.playing = false; this.waiting = false; this.paintKeys(); this.save(true); },
+  pause() { if (isDeviceBook()) { Live.pause(); return; } this.offset = this.time(); this.el.pause(); this.playing = false; this.waiting = false; this.paintKeys(); this.save(true); },
   stop(silent) {
+    if (isDeviceBook()) { Live.stop(); return; }
     this.el.pause(); this.playing = false; this.waiting = false; this.offset = 0;
     try { this.el.currentTime = 0; } catch (e) { /* ignore */ }
     if (!silent) this.save(true);
@@ -1804,6 +1801,7 @@ const Player = {
   },
   async seekBy(d) {
     if (!S.book) return;
+    if (isDeviceBook()) { const g = clamp(this.gi + (d > 0 ? 1 : -1), 0, this.segs().length - 1); if (this.playing) Live.speak(g, 0); else { this.gi = g; Live.resumeChar = 0; this.paintLcd(true); } return; }
     this.boost = 0.35; this.boostDir = d > 0 ? 1 : -1;
     let t = this.time() + d, gi = this.gi;
     const wasPlaying = this.playing;
@@ -1881,6 +1879,7 @@ const Player = {
     }
   },
   eject() {
+    if (HAS_SPEECH) { Live.token++; speechSynthesis.cancel(); }
     this.save(true); this.stop(true);
     if (this.url) URL.revokeObjectURL(this.url);
     this.url = null; this.loaded = -1; this.el.removeAttribute('src');
@@ -1944,7 +1943,8 @@ const Player = {
   highlight(t) {
     const m = S.renderMeta.get(S.keys[this.gi]);
     let tok = null;
-    if (m && m.words && this.loaded === this.gi && (this.playing || t > 0)) { const w = m.words.find((x) => t >= x[1] && t < x[2] + 0.04); if (w) tok = w[0]; }
+    if (isDeviceBook()) tok = this.playing ? Live.tok : null;
+    else if (m && m.words && this.loaded === this.gi && (this.playing || t > 0)) { const w = m.words.find((x) => t >= x[1] && t < x[2] + 0.04); if (w) tok = w[0]; }
     const lw = document.getElementById('lcdWord');
     if (lw) {
       const seg = this.segs()[this.gi];
@@ -2211,7 +2211,8 @@ const STARTER_SCRIPT = [
 ];
 
 const TXQ = { q: [], running: false, status: '' };
-function autoTxOn() { return localStorage.getItem('ml.autotx') !== '0'; }
+const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+function autoTxOn() { const v = localStorage.getItem('ml.autotx'); return v === null ? !IS_MOBILE : v !== '0'; }
 function queueTranscribe(s, force = false) {
   if (!s || s.kind === 'reference' || (s.words && s.words.length)) return;
   if (!force && !autoTxOn()) return;
@@ -2514,43 +2515,16 @@ async function recKeep() {
 
 const W2V_VOCAB = { "'": 27, '|': 4, A: 7, B: 24, C: 19, D: 14, E: 5, F: 20, G: 21, H: 11, I: 10, J: 29, K: 26, L: 15, M: 17, N: 9, O: 8, P: 23, Q: 30, R: 13, S: 12, T: 6, U: 16, V: 25, W: 18, X: 28, Y: 22, Z: 31 };
 const W2V_BLANK = 0;
-let _ctcPipe = null, _ctcFailed = false;
+let _ctcReady = false, _ctcFailed = false;
 async function ensureAligner(onStatus) {
-  if (_ctcPipe) return _ctcPipe;
+  if (_ctcReady) return true;
   if (_ctcFailed) throw new Error('aligner unavailable');
-  try {
-    onStatus && onStatus('Loading the word aligner (about 95 MB, first time only)…');
-    const T = await import(CDN.transformers);
-    T.env.allowLocalModels = false;
-    _ctcPipe = await T.pipeline('automatic-speech-recognition', 'Xenova/wav2vec2-base-960h', {
-      progress_callback: (p) => { if (p.status === 'progress' && onStatus && /onnx/.test(p.file || '')) onStatus(`Loading the word aligner… ${Math.round(p.progress || 0)}%`); },
-    });
-    return _ctcPipe;
-  } catch (e) { _ctcFailed = true; console.warn('aligner failed to load', e); throw e; }
+  try { await ML.call('load-ctc', {}, onStatus); _ctcReady = true; return true; }
+  catch (e) { _ctcFailed = true; console.warn('aligner failed to load', e); throw e; }
 }
 async function ctcEmissions(x16) {
-  const pipe = await ensureAligner();
-  const WIN = 16000 * 20, parts = [];
-  let V = 0;
-  for (let o = 0; o < x16.length; o += WIN) {
-    const slice = x16.subarray(o, Math.min(x16.length, o + WIN));
-    if (slice.length < 1600) break;
-    const inputs = await pipe.processor(slice);
-    const { logits } = await pipe.model(inputs);
-    const [, Tn, Vn] = logits.dims; V = Vn;
-    const d = logits.data, lp = new Float32Array(Tn * Vn);
-    for (let t = 0; t < Tn; t++) {
-      let mx = -Infinity; for (let v = 0; v < Vn; v++) mx = Math.max(mx, d[t * Vn + v]);
-      let s = 0; for (let v = 0; v < Vn; v++) s += Math.exp(d[t * Vn + v] - mx);
-      const ls = mx + Math.log(s); for (let v = 0; v < Vn; v++) lp[t * Vn + v] = d[t * Vn + v] - ls;
-    }
-    parts.push({ lp, T: Tn, secs: slice.length / 16000 });
-    await yieldUI();
-  }
-  const T = parts.reduce((a, p) => a + p.T, 0), lp = new Float32Array(T * V);
-  let off = 0; for (const p of parts) { lp.set(p.lp, off * V); off += p.T; }
-  const secs = parts.reduce((a, p) => a + p.secs, 0);
-  return { lp, T, V, frame: T ? secs / T : 0.02 };
+  const r = await ML.call('ctc', { audio: x16 }, null, [x16.buffer]);
+  return { lp: r.lp, T: r.T, V: r.V, frame: r.T ? r.secs / r.T : 0.02 };
 }
 function ctcForcedAlign(lp, T, V, tokens) {
   const N = tokens.length;
@@ -2618,7 +2592,7 @@ async function alignRaw(pcm, rate, transcript, offset = 0) {
 }
 async function alignBest(pcm, rate, transcript, onStatus) {
   try {
-    if (pcm.length / rate <= 90) { await ensureAligner(onStatus); onStatus && onStatus('Lining up the words…'); return { words: await alignWithModel(pcm, rate, transcript), by: 'aligner' }; }
+    if (!IS_MOBILE && pcm.length / rate <= 90) { await ensureAligner(onStatus); onStatus && onStatus('Lining up the words…'); return { words: await alignWithModel(pcm, rate, transcript), by: 'aligner' }; }
   } catch (e) { console.warn('model alignment failed, using fallback', e); }
   const t = alignTake(pcm, rate, transcript);
   return { words: t.words, by: t.exact ? 'word' : 'prompt-rough' };
@@ -2630,8 +2604,8 @@ async function transcribeAndAlign(sample, onStatus) {
   onStatus && onStatus('Finding the words…');
   const out = await asr(x16, { return_timestamps: true, chunk_length_s: 30, stride_length_s: 5 });
   const chunks = (out.chunks || []).filter((c) => String(c.text || '').trim());
-  let aligner = true;
-  try { await ensureAligner(onStatus); } catch (e) { aligner = false; }
+  let aligner = !IS_MOBILE;
+  if (aligner) { try { await ensureAligner(onStatus); } catch (e) { aligner = false; } }
   const words = [];
   for (let i = 0; i < chunks.length; i++) {
     const c = chunks[i], text = String(c.text).trim();
@@ -2655,35 +2629,26 @@ const STD_VOICES = [
   { id: 'am_fenrir', name: 'Fenrir', note: 'deep · American', stripe: '#4a3a5a' },
   { id: 'bm_george', name: 'George', note: 'measured · British', stripe: '#5a4a30' },
 ];
-const KOKORO_MODEL = 'onnx-community/Kokoro-82M-v1.0-ONNX';
-const KOKORO_SRC = ['https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/dist/kokoro.web.js', 'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm'];
 const stdVoice = (id) => STD_VOICES.find((v) => v.id === id) || null;
-let _kokoro = null, _kokoroP = null;
+let _kokoro = null;
 const KOK = { status: '' };
+const PHONE_MSG = 'Standard voices need a computer — they use more memory than phone browsers allow. On this device, pick a device voice instead.';
 async function ensureKokoro(onStatus) {
   if (_kokoro) return _kokoro;
-  if (!_kokoroP) {
-    _kokoroP = (async () => {
-      const say = (m) => { KOK.status = m; if (onStatus) onStatus(m); };
-      say('Loading the standard voices (about 90 MB, first time only)…');
-      let mod = null, last;
-      for (const src of KOKORO_SRC) { try { mod = await import(src); if (mod && mod.KokoroTTS) break; } catch (e) { last = e; } }
-      if (!mod || !mod.KokoroTTS) throw last || new Error('standard voices unavailable');
-      const progress_callback = (p) => { if (p.status === 'progress' && /onnx/.test(p.file || '')) say(`Loading the standard voices… ${Math.round(p.progress || 0)}%`); };
-      if (navigator.gpu) {
-        try { return await mod.KokoroTTS.from_pretrained(KOKORO_MODEL, { dtype: 'fp32', device: 'webgpu', progress_callback }); } catch (e) { console.warn('webgpu voices failed, using wasm', e); }
-      }
-      return mod.KokoroTTS.from_pretrained(KOKORO_MODEL, { dtype: 'q8', device: 'wasm', progress_callback });
-    })();
-  }
-  try { _kokoro = await _kokoroP; KOK.status = ''; return _kokoro; }
-  catch (e) { _kokoroP = null; KOK.status = ''; throw new Error('The standard voices couldn’t load. Check your connection and try again.'); }
+  if (IS_MOBILE) throw new Error(PHONE_MSG);
+  try {
+    await ML.call('load-tts', {}, (m) => { KOK.status = m; if (onStatus) onStatus(m); });
+    _kokoro = { generate: async (text, o) => { const r = await ML.call('tts', { text, voice: o.voice }); return { audio: r.audio, sampling_rate: r.sr }; } };
+    KOK.status = '';
+    return _kokoro;
+  } catch (e) { KOK.status = ''; console.warn(e); throw new Error('The standard voices couldn’t load. Check your connection and try again.'); }
 }
 async function timeTokens(pcm, text) {
   const toks = displayTokens(text);
   if (!toks.length) return [];
   const counts = toks.map((t) => (/\d/.test(t.raw) ? numberWords(t.raw).length : 1));
   try {
+    if (IS_MOBILE) throw new Error('skip the aligner on phones to save memory');
     await ensureAligner();
     const spoken = await alignRaw(pcm, RATE, toks.map((t) => t.raw).join(' '));
     if (spoken.length === counts.reduce((a, b) => a + b, 0)) {
@@ -2714,6 +2679,153 @@ class StandardEngine {
 }
 const STD_ENGINES = new Map();
 function standardEngine(id) { if (!STD_ENGINES.has(id)) STD_ENGINES.set(id, new StandardEngine(id)); return STD_ENGINES.get(id); }
+
+const ML_WORKER_SRC = `
+const TF = ${JSON.stringify(CDN.transformers)};
+const KOK = ['https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/dist/kokoro.web.js', 'https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm'];
+let T = null, asrP = null, ctcP = null, kokP = null;
+const say = (id, progress) => self.postMessage({ id, progress });
+const prog = (id, label) => (p) => { if (p.status === 'progress' && /onnx/.test(p.file || '')) say(id, label + '… ' + Math.round(p.progress || 0) + '%'); };
+async function tf() { if (!T) { T = await import(TF); T.env.allowLocalModels = false; } return T; }
+const ops = {
+  'load-asr': (a, id) => (asrP ||= (async () => { const t = await tf(); say(id, 'Loading the on-device transcriber (about 40 MB, first time only)…');
+    return t.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', { revision: 'output_attentions', progress_callback: prog(id, 'Loading the transcriber') }); })().catch((e) => { asrP = null; throw e; })),
+  async asr(a, id) { const p = await ops['load-asr'](a, id); say(id, 'Finding the words…'); return p(a.audio, a.opts); },
+  'load-ctc': (a, id) => (ctcP ||= (async () => { const t = await tf(); say(id, 'Loading the word aligner (about 95 MB, first time only)…');
+    return t.pipeline('automatic-speech-recognition', 'Xenova/wav2vec2-base-960h', { progress_callback: prog(id, 'Loading the word aligner') }); })().catch((e) => { ctcP = null; throw e; })),
+  async ctc(a, id) {
+    const pipe = await ops['load-ctc'](a, id), x = a.audio, WIN = 16000 * 20, parts = []; let V = 0, secs = 0;
+    for (let o = 0; o < x.length; o += WIN) {
+      const s = x.subarray(o, Math.min(x.length, o + WIN)); if (s.length < 1600) break;
+      const { logits } = await pipe.model(await pipe.processor(s));
+      const Tn = logits.dims[1]; V = logits.dims[2]; const d = logits.data, lp = new Float32Array(Tn * V);
+      for (let t = 0; t < Tn; t++) { let mx = -Infinity; for (let v = 0; v < V; v++) mx = Math.max(mx, d[t * V + v]);
+        let z = 0; for (let v = 0; v < V; v++) z += Math.exp(d[t * V + v] - mx); const ls = mx + Math.log(z);
+        for (let v = 0; v < V; v++) lp[t * V + v] = d[t * V + v] - ls; }
+      parts.push({ lp, T: Tn }); secs += s.length / 16000;
+    }
+    const Tt = parts.reduce((n, p) => n + p.T, 0), lp = new Float32Array(Tt * V); let off = 0;
+    for (const p of parts) { lp.set(p.lp, off * V); off += p.T; }
+    return { lp, T: Tt, V, secs };
+  },
+  'load-tts': (a, id) => (kokP ||= (async () => { say(id, 'Loading the standard voices (about 90 MB, first time only)…');
+    let mod = null, last; for (const s of KOK) { try { mod = await import(s); if (mod && mod.KokoroTTS) break; } catch (e) { last = e; } }
+    if (!mod || !mod.KokoroTTS) throw last || new Error('voices unavailable');
+    return mod.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'q8', device: 'wasm', progress_callback: prog(id, 'Loading the standard voices') }); })().catch((e) => { kokP = null; throw e; })),
+  async tts(a, id) { const k = await ops['load-tts'](a, id); const r = await k.generate(a.text, { voice: a.voice }); const audio = r.audio instanceof Float32Array ? r.audio : Float32Array.from(r.audio); return { audio, sr: r.sampling_rate || 24000 }; },
+};
+self.onmessage = async (e) => {
+  const { id, op, args } = e.data;
+  try {
+    const res = await ops[op](args || {}, id), tr = [];
+    if (res && res.audio instanceof Float32Array) tr.push(res.audio.buffer);
+    if (res && res.lp instanceof Float32Array) tr.push(res.lp.buffer);
+    self.postMessage({ id, ok: true, res: op.startsWith('load-') ? true : res }, tr);
+  } catch (err) { self.postMessage({ id, ok: false, err: String((err && err.message) || err) }); }
+};
+`;
+const ML = {
+  w: null, seq: 0, pend: new Map(),
+  get() {
+    if (this.w) return this.w;
+    const url = URL.createObjectURL(new Blob([ML_WORKER_SRC], { type: 'text/javascript' }));
+    const w = new Worker(url, { type: 'module' });
+    w.onmessage = (e) => {
+      const { id, progress, ok, res, err } = e.data, p = this.pend.get(id);
+      if (!p) return;
+      if (progress) { if (p.onStatus) p.onStatus(progress); return; }
+      this.pend.delete(id);
+      if (ok) p.res(res); else p.rej(new Error(err));
+    };
+    w.onerror = (e) => { if (e.preventDefault) e.preventDefault(); this.reset('The speech tools stopped on this device. Close other tabs and try again.'); };
+    this.w = w;
+    return w;
+  },
+  reset(msg) {
+    for (const p of this.pend.values()) p.rej(new Error(msg));
+    this.pend.clear();
+    try { if (this.w) this.w.terminate(); } catch (e) { /* ignore */ }
+    this.w = null; _ctcFailed = false; _ctcReady = false; _kokoro = null;
+  },
+  call(op, args = {}, onStatus = null, transfer = []) {
+    const w = this.get(), id = ++this.seq;
+    return new Promise((res, rej) => { this.pend.set(id, { res, rej, onStatus }); w.postMessage({ id, op, args }, transfer); });
+  },
+};
+
+const HAS_SPEECH = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+function deviceVoices() {
+  if (!HAS_SPEECH) return [];
+  const all = speechSynthesis.getVoices();
+  const en = all.filter((v) => /^en/i.test(v.lang));
+  return (en.length ? en : all).slice().sort((a, b) => (b.localService - a.localService) || a.name.localeCompare(b.name)).slice(0, 24);
+}
+let _voiceCount = -1, _voiceT = 0;
+if (HAS_SPEECH) speechSynthesis.onvoiceschanged = () => {
+  clearTimeout(_voiceT);
+  _voiceT = setTimeout(() => {
+    const n = speechSynthesis.getVoices().length;
+    if (n === _voiceCount) return;   // some browsers fire this repeatedly; only repaint on a real change
+    _voiceCount = n;
+    if (S.tab === 'deck' && !Player.playing) paintBayB();
+    if (S.tab === 'archive' && $('#devVoices')) $('#devVoices').innerHTML = deviceVoicesHTML();
+  }, 400);
+};
+const isDeviceBook = () => !!(S.book && /^device:/.test(S.book.std_voice || ''));
+function deviceVoiceFor(tag) { const uri = String(tag || '').replace(/^device:/, ''); return deviceVoices().find((v) => v.voiceURI === uri) || speechSynthesis.getVoices().find((v) => v.voiceURI === uri) || null; }
+function deviceVoiceName(tag) { const v = deviceVoiceFor(tag); return v ? v.name.replace(/\s*\(.*\)\s*$/, '') : 'Device voice'; }
+function tokenAtChar(text, ci) { const toks = displayTokens(text); for (let i = 0; i < toks.length; i++) if (ci < toks[i].e) return i; return toks.length - 1; }
+function sayOnce(text, tag, onWord) {
+  return new Promise((res) => {
+    if (!HAS_SPEECH) { res(false); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = deviceVoiceFor(tag); if (v) u.voice = v;
+    u.onboundary = (e) => { if (onWord) onWord(e.charIndex); };
+    u.onend = () => res(true); u.onerror = () => res(false);
+    speechSynthesis.speak(u);
+  });
+}
+const Live = {
+  token: 0, gi: 0, char: 0, tok: null, startedAt: 0,
+  sentences(text, from) {
+    const out = []; let pos = 0;
+    for (const s of splitSentences(text)) { const at = text.indexOf(s, pos); pos = at + s.length; if (at + s.length > from) out.push({ at: Math.max(at, from), text: text.slice(Math.max(at, from), at + s.length) }); }
+    return out.length ? out : [{ at: from, text: text.slice(from) }];
+  },
+  async speak(gi, fromChar = 0) {
+    const segs = Player.segs(); if (!segs[gi]) { Player.playing = false; Player.paintKeys(); return; }
+    const my = ++this.token; this.gi = gi; Player.gi = gi; this.char = fromChar;
+    speechSynthesis.cancel();
+    Player.playing = true; Player.paintKeys(); Player.paintLcd(true);
+    const seg = segs[gi], voiceTagV = S.book.std_voice;
+    for (const s of this.sentences(seg.text, fromChar)) {
+      if (my !== this.token) return;
+      await new Promise((res) => {
+        const u = new SpeechSynthesisUtterance(s.text);
+        const v = deviceVoiceFor(voiceTagV); if (v) u.voice = v;
+        u.rate = Player.rate;
+        u.onboundary = (e) => { if (my !== this.token) return; this.char = s.at + (e.charIndex || 0); this.tok = tokenAtChar(seg.text, this.char); };
+        u.onend = res; u.onerror = res;
+        speechSynthesis.speak(u);
+      });
+    }
+    if (my !== this.token) return;
+    this.tok = null;
+    if (Player.sleepEOC) { const nx = segs[gi + 1]; if (!nx || nx.ci !== seg.ci) { Player.sleepEOC = false; this.stop(); toast('Sleep timer: stopped at the end of the chapter.'); return; } }
+    if (gi + 1 < segs.length) { await sleep(seg.paraEnd ? 350 : 120); if (my === this.token) this.speak(gi + 1, 0); }
+    else { this.stop(); toast('End of the book.'); }
+  },
+  pause() { this.token++; speechSynthesis.cancel(); const seg = Player.segs()[this.gi]; const toks = seg ? displayTokens(seg.text) : []; Player.offset = 0; this.resumeChar = this.tok != null && toks[this.tok] ? toks[this.tok].s : this.char; Player.playing = false; Player.paintKeys(); Player.save(true); },
+  stop() { this.token++; speechSynthesis.cancel(); this.tok = null; this.resumeChar = 0; Player.playing = false; Player.paintKeys(); Player.paintLcd(true); Player.save(true); },
+  elapsed() { const seg = Player.segs()[this.gi]; return seg ? this.char * S.secPerChar : 0; },
+};
+function deviceVoicesHTML() {
+  const vs = deviceVoices();
+  if (!HAS_SPEECH) return '<p class="muted">This browser has no built-in speech voices.</p>';
+  if (!vs.length) return '<p class="muted">Looking for this device’s voices…</p>';
+  return vs.slice(0, 9).map((v) => `<article class="std-case" style="--case-stripe:#55606a"><div class="std-art">${esc(v.name[0])}</div><div><b>${esc(v.name.replace(/\s*\(.*\)\s*$/, '').slice(0, 26))}</b><small>${esc(v.lang)}${v.localService ? ' · offline' : ''}</small></div><div class="row"><button class="mini-btn" data-act="dev-hear" data-uri="${esc(v.voiceURI)}">▶ Hear</button>${S.book ? `<button class="mini-btn" data-act="dev-use" data-uri="${esc(v.voiceURI)}">Use for this book</button>` : ''}</div></article>`).join('');
+}
 
 const WOODS = { walnut: ['#5b3a24', '#3a2416', '#7b5236'], rosewood: ['#5a1f1a', '#351110', '#7a2e24'], oak: ['#9a6b3e', '#6e4a28', '#b88552'], teak: ['#8a5a2b', '#5f3c1b', '#a87039'], ebony: ['#2a201b', '#14100d', '#3b2f28'] };
 const METALS = { aluminium: ['#4a4c50', '#2c2d30', '#6b6e73'], black: ['#262628', '#151516', '#3a3a3d'], champagne: ['#7a6a4a', '#4f4430', '#a08d62'], silver: ['#9a9da2', '#6c6f74', '#c4c7cb'] };
@@ -2899,9 +3011,9 @@ function renderView() {
 const SUBS = [['reading', 'Reading'], ['manuscript', 'Manuscript'], ['render', 'Recording'], ['audition', 'Audition'], ['bookmarks', 'Bookmarks'], ['export', 'Export']];
 function curVoice() { return S.book ? S.voices.find((v) => v.id === S.book.voice_id) : null; }
 function curStd() { return S.book && S.book.std_voice ? stdVoice(S.book.std_voice) : null; }
-function curVoiceName() { const v = curVoice(), st = curStd(); return st ? st.name : v ? v.name : ''; }
+function curVoiceName() { const v = curVoice(), st = curStd(); return isDeviceBook() ? deviceVoiceName(S.book.std_voice) : st ? st.name : v ? v.name : ''; }
 function voiceOptions(selected) {
-  return `<option value="">— choose a voice —</option><optgroup label="Standard voices">${STD_VOICES.map((v) => `<option value="std:${v.id}" ${selected === 'std:' + v.id ? 'selected' : ''}>${esc(v.name)} — ${esc(v.note)}</option>`).join('')}</optgroup>${S.voices.length ? `<optgroup label="Your voice archives">${S.voices.map((x) => `<option value="${x.id}" ${selected === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</optgroup>` : ''}`;
+  return `<option value="">— choose a voice —</option><optgroup label="Standard voices${IS_MOBILE ? ' — computers only' : ''}">${STD_VOICES.map((v) => `<option value="std:${v.id}" ${selected === 'std:' + v.id ? 'selected' : ''} ${IS_MOBILE ? 'disabled' : ''}>${esc(v.name)} — ${esc(v.note)}</option>`).join('')}</optgroup>${deviceVoices().length ? `<optgroup label="Device voices — instant, play only">${deviceVoices().map((v) => `<option value="device:${esc(v.voiceURI)}" ${selected === 'device:' + v.voiceURI ? 'selected' : ''}>${esc(v.name.replace(/\s*\(.*\)\s*$/, '').slice(0, 30))} — ${esc(v.lang)}</option>`).join('')}</optgroup>` : ''}${S.voices.length ? `<optgroup label="Your voice archives">${S.voices.map((x) => `<option value="${x.id}" ${selected === x.id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</optgroup>` : ''}`;
 }
 function renderDeck() {
   $('#view').innerHTML = `<section class="deck">
@@ -2932,9 +3044,13 @@ function paintBayB() {
   const box = $('#bayB'); if (!box) return;
   const v = curVoice(), st = curStd(), smp = v ? S.samples[v.id] : null;
   const dur = smp ? smp.reduce((a, x) => a + (x.duration || 0), 0) : 0;
-  const sel = st ? 'std:' + st.id : v ? v.id : '';
+  const sel = isDeviceBook() ? S.book.std_voice : st ? 'std:' + st.id : v ? v.id : '';
   let win, lcd;
-  if (st) {
+  if (isDeviceBook()) {
+    const nm = deviceVoiceName(S.book.std_voice);
+    win = cassetteSVG({ title: nm, sub: 'device voice · plays live', style: { shell: 'black', stripe: '#55606a' }, side: 'B' });
+    lcd = `<div class="kv"><span>VOICE</span><b>${esc(nm.toUpperCase().slice(0, 16))}</b></div><div class="kv"><span>TYPE</span><b>DEVICE</b></div><div class="kv"><span>DOWNLOAD</span><b>NONE</b></div><div class="kv"><span>MODE</span><b>LIVE READ</b></div>`;
+  } else if (st) {
     win = cassetteSVG({ title: st.name, sub: 'standard voice · ' + st.note, style: { shell: 'ivory', stripe: st.stripe }, side: 'B' });
     lcd = `<div class="kv"><span>VOICE</span><b>${esc(st.name.toUpperCase())}</b></div><div class="kv"><span>TYPE</span><b>STANDARD</b></div><div class="kv"><span>ACCENT</span><b>${esc(st.note.split('·')[1].trim().toUpperCase())}</b></div><div class="kv"><span>STATUS</span><b>${_kokoro ? 'READY' : KOK.status ? 'LOADING' : 'ON CALL'}</b></div>`;
   } else if (v) {
@@ -3012,7 +3128,7 @@ function panelReading() {
   segs.forEach((s) => { if (!byPi.has(s.pi)) byPi.set(s.pi, []); byPi.get(s.pi).push(s); });
   const { n, t } = renderedCount(ci);
   return `<div class="panel-bar">${chapterSelect('read-ch', ci)}<span class="muted">${n}/${t} segments recorded · click any sentence to play from there</span><label class="check"><input type="checkbox" id="follow" checked> follow narration</label></div>
-    <article class="reader">
+    <article class="reader ${isDeviceBook() ? 'live' : ''}">
       ${ch.skip ? '<p class="muted">This chapter is skipped from narration (toggle it in Manuscript).</p>' : ''}
       ${byPi.has(-1) ? `<h2 class="ch-title">${byPi.get(-1).map(segHTML).join('')}</h2>` : `<h2 class="ch-title">${esc(ch.title)}</h2>`}
       ${ch.paragraphs.map((p, pi) => `<div class="para"><p>${(byPi.get(pi) || []).map(segHTML).join('') || esc(p.t)}</p>${byPi.has(pi) ? `<button class="mini-btn" data-act="para-rerender" data-ci="${ci}" data-pi="${pi}" title="Re-record this paragraph">↻</button>` : ''}<span class="pg">p.${p.p}</span></div>`).join('')}
@@ -3071,8 +3187,9 @@ function panelRender() {
     </div>
     <div>
       <h3>Archival reconstruction</h3>
+      ${isDeviceBook() ? `<p>Voice: <b>${esc(curVoiceName())}</b>, a device voice. It reads live the moment you press ▶ — nothing to record or download. Browsers don’t let device voices be saved as audio files, so to export this book, choose a standard voice on Side B.</p>` : ''}
       ${curStd() ? `<p>Voice: <b>${esc(curStd().name)}</b>, a standard voice (${esc(curStd().note)}). It is generated on this device by the open-source Kokoro model — free, no account. The first recording downloads the voice model once (about 90 MB); after that it works offline. The word aligner (about 95 MB) also loads once so the page can follow along word by word.</p>` : ''}
-      <p ${curStd() ? 'hidden' : ''}>Voice: <b>${v ? esc(v.name) : 'none loaded'}</b>. The narrator searches the archive for each word, prefers takes that were spoken consecutively in the original recording, matches pitch with gentle tape varispeed (±5%), evens out unusual durations with a pitch-preserving stretch, levels loudness and crossfades the joins.</p>
+      <p ${curStd() || isDeviceBook() ? 'hidden' : ''}>Voice: <b>${v ? esc(v.name) : 'none loaded'}</b>. The narrator searches the archive for each word, prefers takes that were spoken consecutively in the original recording, matches pitch with gentle tape varispeed (±5%), evens out unusual durations with a pitch-preserving stretch, levels loudness and crossfades the joins.</p>
       <label class="range"><span>Word spacing <b id="gapVal">${Math.round((o.wordGap ?? 0.05) * 1000)} ms</b></span><input type="range" min="0" max="160" value="${Math.round((o.wordGap ?? 0.05) * 1000)}" data-change="opt-gap"></label>
       <label class="check"><input type="checkbox" data-change="opt-pitch" ${o.pitchMatch === false ? '' : 'checked'}> Pitch-match takes (varispeed)</label>
       <label class="check"><input type="checkbox" data-change="opt-dur" ${o.durationMatch === false ? '' : 'checked'}> Even out word durations (time-stretch)</label>
@@ -3106,7 +3223,7 @@ function panelBookmarks() {
 }
 function panelExport() {
   return `<div class="grid2"><div>
-      <h3>Export the tape</h3>
+      <h3>Export the tape</h3>${isDeviceBook() ? '<p class="warn-note">This book is read by a device voice, which plays live only. Pick a standard voice on Side B and record it to export audio.</p>' : ''}
       <label><span class="engr">Range</span><select class="sel" id="exScope"><option value="book">Whole book</option>${S.struct.chapters.map((c, i) => c.skip ? '' : `<option value="${i}">${i + 1}. ${esc(c.title.slice(0, 60))}</option>`).join('')}</select></label>
       <div class="row"><button class="btn" data-act="ex-mp3">MP3</button><button class="btn" data-act="ex-wav">WAV</button><button class="btn ghost" data-act="ex-m4b">M4B kit (whole book)</button></div>
       <p class="muted">MP3 and WAV are assembled in your browser. Whole-book WAV files are very large — prefer chapters. <b>M4B</b> needs FFmpeg, which isn’t bundled in a single web page: the kit downloads the book MP3 plus a chapter-marker file with the one-line free FFmpeg command that turns them into an M4B with chapters.</p>
@@ -3132,9 +3249,11 @@ function voiceCase(v) {
 async function renderArchive() {
   $('#view').innerHTML = `<section class="archive">
     <div class="archive-head"><h2 class="display">Voice archive</h2><div class="row"><button class="btn" data-act="voice-new">New voice archive</button><button class="btn ghost" data-act="voice-import">Import archive file</button></div></div>
-    <h3 class="shelf-title">Standard voices <small class="muted">ready to read anything · generated free on this device</small></h3>
-    <div class="std-voices">${STD_VOICES.map((v) => `<article class="std-case" style="--case-stripe:${v.stripe}"><div class="std-art">${esc(v.name[0])}</div><div><b>${esc(v.name)}</b><small>${esc(v.note)}</small></div><div class="row"><button class="mini-btn" data-act="std-hear" data-id="${v.id}">▶ Hear</button>${S.book ? `<button class="mini-btn" data-act="std-use" data-id="${v.id}">Use for this book</button>` : ''}</div></article>`).join('')}</div>
+    <h3 class="shelf-title">Standard voices <small class="muted">${IS_MOBILE ? 'available on computers only — they need more memory than phones allow' : 'can be saved as audio files · generated free on this computer · one download of about 90 MB'}</small></h3>
+    <div class="std-voices">${STD_VOICES.map((v) => `<article class="std-case" style="--case-stripe:${v.stripe}"><div class="std-art">${esc(v.name[0])}</div><div><b>${esc(v.name)}</b><small>${esc(v.note)}</small></div><div class="row"><button class="mini-btn" data-act="std-hear" data-id="${v.id}" ${IS_MOBILE ? 'disabled title="Computers only"' : ''}>▶ Hear</button>${S.book ? `<button class="mini-btn" data-act="std-use" data-id="${v.id}">Use for this book</button>` : ''}</div></article>`).join('')}</div>
     <p class="fine" id="stdMsg">${esc(KOK.status || '')}</p>
+    <h3 class="shelf-title">Device voices <small class="muted">built into this phone or computer · instant, nothing to download · play live only</small></h3>
+    <div class="std-voices" id="devVoices">${deviceVoicesHTML()}</div>
     <h3 class="shelf-title">Your voice archives <small class="muted">built from real recordings</small></h3>
     <div class="cases">${S.voices.map(voiceCase).join('') || '<p class="muted">None yet. Press “New voice archive” to record or upload someone’s voice.</p>'}</div>
     <div id="voiceDetail"></div></section>`;
@@ -3169,7 +3288,6 @@ async function renderVoiceDetail() {
     <div class="subtabs">${tabs.map(([id, l]) => `<button class="subtab ${S.vtab === id ? 'on' : ''}" data-act="vtab" data-vtab="${id}">${l}</button>`).join('')}</div>
     <div id="vtabBody">${{ drawer: vtabDrawer, coverage: vtabCoverage, lexicon: vtabLexicon, sources: vtabSources }[S.vtab](v, smp)}</div>
   </div>`;
-  if (autoTxOn()) smp.filter((x) => isRough(x) && x.transcript && !x._realigned).forEach((x) => { x._realigned = true; queueRealign(x); });
 }
 function vtabDrawer(v, smp) {
   const f = (S.drawerFilter || '').toLowerCase(), rec = smp.filter((x) => x.kind !== 'reference');
@@ -3472,7 +3590,8 @@ async function saveNewBook(struct, action) {
     const id = uuid(), path = `${S.user.id}/books/${id}.json`, counts = structCounts(struct);
     await sbUpload(path, new Blob([JSON.stringify(struct)], { type: 'application/json' }), 'application/json');
     const archive = S.voices.find((x) => x.id === S.voiceSel && (S.samples[x.id] || []).some((y) => y.words && y.words.length));
-    const voiceId = archive ? archive.id : null, std = archive ? null : (S.lastStd || 'af_heart');
+    const dv = deviceVoices()[0];
+    const voiceId = archive ? archive.id : null, std = archive ? null : S.lastStd ? S.lastStd : dv ? 'device:' + dv.voiceURI : 'af_heart';
     const { data, error } = await sb.from('books').insert({ id, title: struct.title, author: struct.author, pages: struct.pages, chapter_count: counts.chapters, segment_count: counts.segments, total_chars: counts.chars, voice_id: voiceId, std_voice: std, struct_path: path }).select().single();
     if (error) throw error;
     S.books.unshift(data);
@@ -3480,7 +3599,7 @@ async function saveNewBook(struct, action) {
     logAct(action, { title: struct.title, pages: struct.pages, chapters: counts.chapters, ocr_pages: struct.ocrPages || 0 });
     S.tab = 'deck'; S.sub = action === 'text_paste' ? 'reading' : 'manuscript'; renderView();
     await loadBook(data);
-    toast(`“${struct.title}” is on the deck: ${counts.chapters} chapter(s), ${counts.segments} passages.  Read by ${archive ? archive.name : stdVoice(std).name} — press ● Rec chapter, then ▶ to listen.`, 'info', 9000);
+    toast(`“${struct.title}” is on the deck: ${counts.chapters} chapter(s), ${counts.segments} passages.  Read by ${archive ? archive.name : /^device:/.test(std) ? deviceVoiceName(std) + ' — press ▶ to listen' : stdVoice(std).name + ' — press ● Rec chapter, then ▶ to listen'}.`, 'info', 9000);
   } catch (e) { console.error(e); toast(e.message || String(e), 'err', 9000); }
 }
 async function loadBook(b) {
@@ -3489,14 +3608,14 @@ async function loadBook(b) {
   let st = await IDB.get('books', ck).catch(() => null);
   if (!st) { st = JSON.parse(await (await sbDownload(b.struct_path)).text()); IDB.put('books', ck, st).catch(() => {}); }
   if (b.voice_id && !S.voices.find((v) => v.id === b.voice_id)) b.voice_id = null;
-  if (b.std_voice && !stdVoice(b.std_voice)) b.std_voice = null;
+  if (b.std_voice && !/^device:/.test(b.std_voice) && !stdVoice(b.std_voice)) b.std_voice = null;
   Object.assign(S, { book: b, struct: st, segIndex: buildSegments(st), structDirty: false, pausedJob: null, au: null });
   await loadRenderMeta();
   Player.restore();
   S.readCi = (S.segIndex.segs[Player.gi] || {}).ci || 0; S.msCi = S.readCi;
   localStorage.setItem('ml.lastBook.' + S.user.id, b.id);
   if (b.voice_id) fetchSamples(b.voice_id).catch(() => {});
-  if (b.std_voice) { S.lastStd = b.std_voice; ensureKokoro().then(() => paintBayB(), () => {}); }
+  if (b.std_voice && !/^device:/.test(b.std_voice)) S.lastStd = b.std_voice;
   if (S.tab === 'deck') renderDeck();
   checkInterruptedJob();
 }
@@ -3513,9 +3632,11 @@ async function ejectBook() {
 async function setBookVoice(value) {
   if (!S.book) return;
   if (R.running) { toast('Pause recording before changing the voice.', 'err'); paintBayB(); return; }
-  const isStd = /^std:/.test(value || ''), next = isStd ? { std_voice: value.slice(4), voice_id: null } : { std_voice: null, voice_id: value || null };
-  const nextTag = next.std_voice ? 'std-' + next.std_voice : next.voice_id;
-  if (voiceTag() && nextTag !== voiceTag() && renderedCount().n && !(await confirmBox('This book already has recordings in another voice. Switching starts a separate set of tapes for the new voice (the old ones stay on this device). Continue?', 'Switch voice'))) { paintBayB(); return; }
+  const isDev = /^device:/.test(value || ''), isStd = /^std:/.test(value || '');
+  const next = isDev ? { std_voice: value, voice_id: null } : isStd ? { std_voice: value.slice(4), voice_id: null } : { std_voice: null, voice_id: value || null };
+  const nextTag = isDev ? 'device' : next.std_voice ? 'std-' + next.std_voice : next.voice_id;
+  if (isDeviceBook() && !isDev) Live.stop();
+  if (voiceTag() && nextTag !== voiceTag() && !isDev && renderedCount().n && !(await confirmBox('This book already has recordings in another voice. Switching starts a separate set of tapes for the new voice (the old ones stay on this device). Continue?', 'Switch voice'))) { paintBayB(); return; }
   const { error } = await sb.from('books').update(next).eq('id', S.book.id);
   if (error) { toast(error.message, 'err'); paintBayB(); return; }
   Object.assign(S.book, next); S.engine = null; Player.loaded = -1;
@@ -3607,6 +3728,7 @@ const ACTIONS = {
   'tp-rew': () => Player.seekBy(-15), 'tp-ff': () => Player.seekBy(15), 'tp-prevch': () => Player.chapter(-1), 'tp-nextch': () => Player.chapter(1),
   preview: async () => {
     if (!S.book) return;
+    if (isDeviceBook()) { Player.playAt(Player.gi, 0, true); return; }
     const segs = S.segIndex.segs, start = Player.gi, list = segs.slice(start, start + 4).filter((s) => !S.renderMeta.has(S.keys[s.gi]));
     if (list.length) { toast('Recording a short preview…'); await runRender(list, 'preview'); }
     Player.playAt(start, 0, true);
@@ -3715,6 +3837,8 @@ const ACTIONS = {
     } catch (e) { if (msg) msg.textContent = e.message; toast(e.message, 'err'); }
     el.disabled = false;
   },
+  'dev-hear': (el) => { const v = deviceVoices().find((x) => x.voiceURI === el.dataset.uri); sayOnce(`Hello, I'm ${v ? v.name.replace(/\s*\(.*\)\s*$/, '') : 'your device voice'}. I can read any book on the deck, straight away.`, 'device:' + el.dataset.uri); logAct('device_voice_hear', { voice: v ? v.name : '' }); },
+  'dev-use': async (el) => { await setBookVoice('device:' + el.dataset.uri); S.lastStd = null; toast(`${deviceVoiceName('device:' + el.dataset.uri)} will read “${S.book.title}” — press ▶ on the deck.`); },
   'std-use': async (el) => { S.lastStd = el.dataset.id; await setBookVoice('std:' + el.dataset.id); toast(`${stdVoice(el.dataset.id).name} will read “${S.book.title}”.`); },
   'try-speak': async () => {
     const v = S.voices.find((x) => x.id === S.voiceSel), text = ($('#tryTx') || {}).value || '';
@@ -3760,6 +3884,7 @@ const ACTIONS = {
     if (f) { try { await addReference(v, f); renderVoiceDetail(); } catch (e) { toast(e.message, 'err'); } }
   },
   'tx-all': () => {
+    if (IS_MOBILE) { toast('Finding words automatically needs a computer. On a phone, open a tape and type what is said, or use Record.', 'warn', 8000); return; }
     const v = S.voices.find((x) => x.id === S.voiceSel), list = (S.samples[v.id] || []).filter((x) => x.kind !== 'reference' && !(x.words && x.words.length));
     list.forEach((x) => queueTranscribe(x, true)); toast(`Preparing ${list.length} tape(s) on this device. The first time, a free speech model (about 40 MB) downloads once.`, 'info', 7000);
   },
